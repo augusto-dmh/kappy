@@ -1,0 +1,57 @@
+@media all and (min-width:960px) and (max-width: 1024px) {
+    /* put your css styles in here */
+}
+
+@media all and (min-width:801px) and (max-width: 959px) {
+    /* put your css styles in here */
+}
+
+@media all and (min-width:769px) and (max-width: 800px) {
+    /* put your css styles in here */
+}
+
+@media all and (min-width:569px) and (max-width: 768px) {
+    /* put your css styles in here */
+}
+
+@media all and (min-width:481px) and (max-width: 568px) {
+    /* put your css styles in here */
+}
+
+@media all and (min-width:321px) and (max-width: 480px) {
+
+    body {
+        background: #2B5B84;
+        background-image: none;
+        background-size: 100% 100%;
+        background-position: 50% 100%;
+        background-repeat: no-repeat;
+    }
+
+    .headerIcons {
+        width: 55px;
+        height: 55px;
+        margin: 10px 42px;
+    }
+
+    .imageSize {
+        padding: 70px 0px;
+        width: 230px;
+        height: 230px;
+    }
+
+    .caixa {
+        background: #2C7785;
+        width: 330px;
+        height: 330px;
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-evenly;
+      }
+}
+
+@media all and (min-width:0px) and (max-width: 320px) {
+    /* put your css styles in here */
+}
