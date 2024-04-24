@@ -6,19 +6,7 @@
     /* put your css styles in here */
 }
 
-@media all and (min-width:769px) and (max-width: 800px) {
-    /* put your css styles in here */
-}
-
-@media all and (min-width:569px) and (max-width: 768px) {
-    /* put your css styles in here */
-}
-
-@media all and (min-width:481px) and (max-width: 568px) {
-    /* put your css styles in here */
-}
-
-@media all and (min-width:321px) and (max-width: 480px) {
+@media all and (min-width:601px) and (max-width: 800px) {
 
     body {
         background: #2B5B84;
@@ -31,11 +19,45 @@
     .headerIcons {
         width: 55px;
         height: 55px;
-        margin: 10px 42px;
+        margin: 10px 10vw;
     }
 
     .imageSize {
-        padding: 70px 0px;
+        padding: 60px 0px;
+        width: 250px;
+        height: 250px;
+    }
+
+    .caixa {
+        background: #2C7785;
+        width: 380px;
+        height: 380px;
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-evenly;
+    }
+}
+
+@media all and (min-width:380px) and (max-width: 600px) {
+
+    body {
+        background: #2B5B84;
+        background-image: none;
+        background-size: 100% 100%;
+        background-position: 50% 100%;
+        background-repeat: no-repeat;
+    }
+
+    .headerIcons {
+        width: 55px;
+        height: 55px;
+        margin: 10px 10vw;
+    }
+
+    .imageSize {
+        padding: 50px 0px;
         width: 230px;
         height: 230px;
     }
@@ -49,9 +71,59 @@
         flex-direction: column;
         align-items: center;
         justify-content: space-evenly;
-      }
+    }
 }
 
-@media all and (min-width:0px) and (max-width: 320px) {
-    /* put your css styles in here */
+@media all and (min-width:0px) and (max-width: 379px) {
+
+    body, main, html {
+        font-size: 17px;
+    }
+
+    body {
+        background: #2B5B84;
+        background-image: none;
+        background-size: 100% 100%;
+        background-position: 50% 100%;
+        background-repeat: no-repeat;
+    }
+
+    .headerIcons {
+        width: 50px;
+        height: 50px;
+        margin: 10px 8vw;
+    }
+
+    .imageSize {
+        padding: 23px 0px;
+        width: 200px;
+        height: 200px;
+    }
+
+    .caixa {
+        background: #2C7785;
+        width: 250px;
+        height: 250px;
+        border-radius: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-evenly;
+    }
+
+    .btn1 {
+        background: #2C3F85;
+        padding: 15px 45px;
+        border-radius: 30px;
+        text-decoration: none;
+        color: #fff;
+      }
+      
+      .btn2 {
+        background: #000;
+        padding: 15px 60px;
+        border-radius: 30px;
+        text-decoration: none;
+        color: #fff;
+      }
 }
