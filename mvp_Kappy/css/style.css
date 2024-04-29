@@ -1,6 +1,5 @@
 body, main, html {
   width: 100%;
-  height: 100%;
   font-family: "Open Sans", sans-serif;
   font-size: 20px;
   font-weight: 700;
@@ -9,9 +8,6 @@ body, main, html {
 
 body {
   background-image: linear-gradient(to right, rgb(11, 11, 11), #105c9e, rgb(11, 11, 11));
-  background-size: 100% 100%;
-  background-position: 50% 100%;
-  background-repeat: no-repeat;
 }  
 
 header {
@@ -22,7 +18,6 @@ header {
 }
 
 main {
-  height: 800px;
   display: flex;
   align-items: center;
   flex-direction: column;
@@ -44,7 +39,7 @@ main {
   background: #2C7785;
   width: 350px;
   height: 350px;
-  border-radius: 25px;
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
