@@ -1,0 +1,8 @@
+.env
+.prettierignore
+dist
+package-lock.json
+src/uploads
+uploads/images
+src/logging/logs.log
+node_modules
