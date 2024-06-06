@@ -21,16 +21,6 @@ export const isInteger = (value) => {
   return schema.safeParse(value).success;
 };
 
-export const isLatitude = (value) => {
-  const schema = z.coerce.number().min(-90).max(90);
-  return schema.safeParse(value).success;
-};
-
-export const isLongitude = (value) => {
-  const schema = z.coerce.number().min(-180).max(180);
-  return schema.safeParse(value).success;
-};
-
 // that's applied to non-string-type columns too - like 'age', because when they're not informed on creating/updating row routes where they should,
 // they get during instantiation "" as value and are checkable with this validation. Then a "'field' is required" is thrown.
 export const isNotEmpty = (value) => {

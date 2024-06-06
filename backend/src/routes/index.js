@@ -4,10 +4,8 @@ const router = new Router();
 
 import user from "./user";
 import token from "./token";
-import photo from "./photo";
-import csv from "./csv";
 
-const routes = [user, token, photo, csv];
+const routes = [user, token];
 
 routes.forEach((route) => {
   router.use(route);

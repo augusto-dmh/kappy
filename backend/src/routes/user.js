@@ -21,23 +21,6 @@ const fieldsValidation = [
       .escape(),
   ],
   [
-    body("birthdate")
-      .notEmpty()
-      .withMessage(errors.birthdate.empty)
-      .bail()
-      .isDate()
-      .withMessage(errors.birthdate.nonDate)
-      .escape(),
-  ],
-  [
-    body("isAdmin")
-      .optional()
-      .isBoolean()
-      .withMessage(errors.isAdmin.nonBoolean)
-      .bail()
-      .escape(),
-  ],
-  [
     body("selectedAvatar")
       .optional()
       .notEmpty()
@@ -52,16 +35,6 @@ const fieldsValidation = [
       .bail()
       .isLength({ min: 6, max: 50 })
       .withMessage(errors.password.invalidLength)
-      .escape(),
-  ],
-  [
-    body("xp")
-      .optional()
-      .notEmpty()
-      .withMessage(errors.xp.empty)
-      .bail()
-      .isInt()
-      .withMessage(errors.xp.nonInteger)
       .escape(),
   ],
 ];
