@@ -96,7 +96,7 @@ export default class User extends Model {
     this.belongsToMany(models.avatar, {
       as: "avatars",
       foreignKey: "userId",
-      through: "user_avatars",
+      through: models.userAvatar,
     });
   }
 }
