@@ -33,8 +33,8 @@ export default class User extends Model {
         checkpoint: {
           type: DataTypes.INTEGER,
           references: {
-            model: 'lessons',
-            key: 'id',
+            model: "lessons",
+            key: "id",
           },
         },
         selectedAvatarId: {
