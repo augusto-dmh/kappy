@@ -1,3 +1,7 @@
+export const name = {
+  empty: "'name' is required.",
+  inUse: "'name' already in use. Please try another.",
+};
 
 export const nickname = {
   invalidLength: "'nickname' must be between 0 and 20 characters.",

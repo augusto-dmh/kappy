@@ -25,7 +25,6 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use("/photos", express.static(path.resolve(__dirname, "public", "photos")));
 app.use(cors(corsOptions));
 // app.use(helmet());
 

@@ -3,7 +3,6 @@ import * as errors from "../validation/errors";
 import ApiError from "../validation/errors/classes/ApiError";
 import stacktrace from "stack-trace";
 import ErrorContext from "../validation/errors/classes/ErrorContext";
-import Photo from "../models/Photo";
 import Avatar from "../models/Avatar";
 import queryString from "query-string";
 
