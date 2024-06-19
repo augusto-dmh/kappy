@@ -1,0 +1,41 @@
+@startuml DER
+
+entity User {
+    id INT <<PK>>
+    nickname VARCHAR(20) <<UK>>
+    checkpoint INT <<FK>>
+    --
+}
+
+entity Lesson {
+    id INT <<PK>>
+    previous_lesson_id INT <<FK>>
+    --
+    name VARCHAR
+}
+
+entity Exercise {
+    id INT <<PK>>
+    lesson_id INT <<FK>>
+    --
+    question TEXT
+}
+
+entity ExerciseChoices {
+    exercise_id INT <<PK, FK>>
+    choice_id INT <<UK>>
+    --
+    choice_text TEXT
+    is_correct BOOLEAN
+}
+
+
+User }o--|| Lesson
+
+Lesson ||--|{ Exercise
+
+Lesson }o--o{ Lesson
+
+Exercise ||--|{ ExerciseChoices
+
+@enduml
