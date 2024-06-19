@@ -4,21 +4,18 @@ export default class Lesson extends Model {
   static init(sequelize) {
     super.init(
       {
-        moduleId: {
-          type: DataTypes.INTEGER,
-          references: {
-            model: 'modules',
-            key: 'id',
-          },
-        },
         name: {
           type: DataTypes.STRING,
           allowNull: false,
         },
-        programmingLanguage: {
-          type: DataTypes.STRING,
-          allowNull: false,
-        },
+        previousLesson: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+              model: 'lesson',
+              key: 'id',
+          }
+        }
       },
       {
         sequelize,
@@ -27,18 +24,17 @@ export default class Lesson extends Model {
     );
   }
   static associate(models) {
-    this.belongsTo(models.module, {
-      foreignKey: 'moduleId',
-      as: 'module',
+    this.hasMany(models.user, {
+      foreignKey: 'checkpoint',
+      as: 'users',
     });
     this.hasMany(models.exercise, {
       foreignKey: 'lessonId',
       as: 'exercises',
     });
-    this.hasMany(models.lessonDependencies, {
-      foreignKey: 'lessonId',
-      as: 'dependencies',
-    }
-    )
+    this.belongsTo(models.lesson, {
+      foreignKey: 'previousLesson',
+      as: 'previous',
+    });
   }
 }

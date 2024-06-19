@@ -1,14 +1,14 @@
-import { Model, DataTypes } from 'sequelize';
+import { Model, DataTypes } from "sequelize";
 
-export default class ExerciseChoices extends Model {
+export default class ExerciseChoice extends Model {
   static init(sequelize) {
     super.init(
       {
         exerciseId: {
           type: DataTypes.INTEGER,
           references: {
-            model: 'exercises',
-            key: 'id',
+            model: "exercises",
+            key: "id",
           },
         },
         choiceId: {
@@ -33,8 +33,8 @@ export default class ExerciseChoices extends Model {
 
   static associate(models) {
     this.belongsTo(models.exercise, {
-      foreignKey: 'exerciseId',
-      as: 'exercise',
+      foreignKey: "exerciseId",
+      as: "exercise",
     });
   }
 }
