@@ -27,7 +27,7 @@ export default class Exercise extends Model {
       include: {
         model: ExerciseChoice,
         as: "choices",
-        attributes: ["choiceText", "isCorrect"],
+        attributes: { exclude: ["createdAt", "updatedAt", "id", "exerciseId"] },
       },
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
