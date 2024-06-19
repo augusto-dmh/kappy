@@ -21,13 +21,13 @@ const index = async (req, res, next) => {
 };
 
 const show = async (req, res, next) => {
-  const user = User.findByPk(req.params.id);
+  const user = await User.findByPk(req.params.id);
 
   res.json({ ...user.dataValues });
 };
 
 const update = async (req, res, next) => {
-  const user = User.findByPk(req.params.id);
+  const user = await User.findByPk(req.params.id);
 
   try {
     const updatedUser = await user.update(req.body);
@@ -39,7 +39,7 @@ const update = async (req, res, next) => {
 };
 
 const destroy = async (req, res, next) => {
-  const user = User.findByPk(req.params.id);
+  const user = await User.findByPk(req.params.id);
 
   try {
     await user.destroy();
