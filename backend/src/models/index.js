@@ -1,23 +1,10 @@
-import Avatar from "./Avatar";
 import User from "./User";
-import UserAvatar from "./UserAvatar";
 import Lesson from "./Lesson";
 import Exercise from "./Exercise";
 import ExerciseChoice from "./ExerciseChoice";
-import LessonDependency from "./LessonDependency";
-import Module from "./Module";
 
 export default function initModels(sequelize) {
-  const models = [
-    Avatar,
-    User,
-    UserAvatar,
-    Module,
-    Exercise,
-    Lesson,
-    ExerciseChoice,
-    LessonDependency,
-  ];
+  const models = [Lesson, User, Exercise, ExerciseChoice];
 
   models.forEach((model) => model.init(sequelize));
   models.forEach(
