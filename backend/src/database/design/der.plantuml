@@ -1,44 +1,17 @@
 @startuml DER
 
 entity User {
-    id BIGINT <<PK>>
-    selected_avatar INT <<FK>>
+    id INT <<PK>>
     nickname VARCHAR(20) <<UK>>
-    email VARCHAR <<UK>>
     checkpoint INT <<FK>>
     --
-    password TEXT
-    energetic_amount INT
-    rubies_amount INT
-}
-
-entity Avatar {
-    id INT <<PK>>
-    name VARCHAR(30) <<UK>>
-    filename TEXT <<UK>>
-    --
-}
-
-entity Module {
-    id INT <<PK>>
-    --
-    name VARCHAR
-    description TEXT
 }
 
 entity Lesson {
     id INT <<PK>>
-    module_id INT <<FK>>
-    --
-    name VARCHAR
-    programming_language VARCHAR
-}
-
-entity LessonDependencies {
-    lesson_id INT <<PK, FK>>
-    next_lesson_id INT <<FK>>
     previous_lesson_id INT <<FK>>
     --
+    name VARCHAR
 }
 
 entity Exercise {
@@ -56,16 +29,12 @@ entity ExerciseChoices {
     is_correct BOOLEAN
 }
 
-User }o--o{ Avatar
-User }o--|| Avatar
 
-User }o--o{ Lesson
-
-Lesson }|--|{ Module
-
-Lesson }|--o{ LessonDependencies
+User }o--|| Lesson
 
 Lesson ||--|{ Exercise
+
+Lesson }o--o{ Lesson
 
 Exercise ||--|{ ExerciseChoices
 
