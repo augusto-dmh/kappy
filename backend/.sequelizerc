@@ -4,5 +4,11 @@ module.exports = {
   config: path.resolve(__dirname, "src", "config", "database.js"),
   "models-path": path.resolve(__dirname, "src", "models"),
   "migrations-path": path.resolve(__dirname, "src", "database", "migrations"),
-  "seeders-path": path.resolve(__dirname, "src", "database", "seeds"),
+  "seeders-path": path.resolve(
+    __dirname,
+    "src",
+    "database",
+    "seeds",
+    "realistic-tests" // change to "mock-tests" if you want more data but "unrealistic" (generated with faker)
+  ),
 };
