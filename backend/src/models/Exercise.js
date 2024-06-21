@@ -1,4 +1,5 @@
 import { Model, DataTypes } from "sequelize";
+import ExerciseChoice from "./ExerciseChoice";
 
 export default class Exercise extends Model {
   static init(sequelize) {
@@ -21,6 +22,15 @@ export default class Exercise extends Model {
         modelName: "exercise",
       }
     );
+
+    this.addScope("defaultScope", {
+      include: {
+        model: ExerciseChoice,
+        as: "choices",
+        attributes: { exclude: ["createdAt", "updatedAt", "id", "exerciseId"] },
+      },
+      attributes: { exclude: ["createdAt", "updatedAt"] },
+    });
   }
 
   static associate(models) {
