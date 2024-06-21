@@ -20,3 +20,5 @@ module.exports = {
     await queryInterface.bulkDelete("lessons", null, {});
   },
 };
+
+// "previousLesson": null always. fix bug
