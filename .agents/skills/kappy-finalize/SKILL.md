@@ -1,6 +1,6 @@
 ---
 name: kappy-finalize
-description: Finalizes and autonomously publishes Kappy changes with consistent Git branch names, Conventional Commit messages, pushes, and structured draft pull requests. Use when the user asks to finalize work, create or rename a branch, prepare a commit, commit changes, push a branch, open a pull request, write a PR description, or publish completed Kappy work. Do not use for implementing features, reviewing code, or debugging CI unless the user also asks to prepare or publish the resulting changes.
+description: Finalizes and autonomously publishes Kappy changes with consistent Git branch names, Conventional Commit messages, pushes, and structured ready-for-review pull requests. Use when the user asks to finalize work, create or rename a branch, prepare a commit, commit changes, push a branch, open a pull request, write a PR description, or publish completed Kappy work. Do not use for implementing features, reviewing code, or debugging CI unless the user also asks to prepare or publish the resulting changes.
 license: CC-BY-4.0
 metadata:
   author: Kappy contributors
@@ -9,7 +9,7 @@ metadata:
 
 # Kappy Finalize
 
-Apply Kappy's repository conventions when preparing or publishing completed work. Treat a request to finalize completed work as authorization to run the full publish workflow autonomously: create or rename the branch, stage intended files, commit, push, and create a draft PR. Keep narrower requests proportional: generate names and text when that is all the user requests, and stop after committing when the user asks only for a commit.
+Apply Kappy's repository conventions when preparing or publishing completed work. Treat a request to finalize completed work as authorization to run the full publish workflow autonomously: create or rename the branch, stage intended files, commit, push, and create an open ready-for-review PR. Keep narrower requests proportional: generate names and text when that is all the user requests, and stop after committing when the user asks only for a commit.
 
 ## Conventions
 
@@ -71,7 +71,7 @@ Fix validation errors before continuing.
 
 ### Step 4: Commit intentionally
 
-1. When the user asks to finalize or publish completed work, proceed autonomously through branch creation or rename, staging, committing, pushing, and draft PR creation.
+1. When the user asks to finalize or publish completed work, proceed autonomously through branch creation or rename, staging, committing, pushing, and open ready-for-review PR creation.
 2. For narrower requests, stop at the requested boundary. For example, a request to commit authorizes staging and committing but not pushing.
 3. Create or rename the branch when needed.
 4. Stage only the intended files. If unrelated files are present and the intended scope cannot be determined safely, ask the user before staging.
@@ -95,7 +95,7 @@ python .claude/skills/kappy-finalize/scripts/render_pr_body.py \
 ```
 
 5. Read [assets/pull_request_template.md](assets/pull_request_template.md) only when the renderer cannot be used or the user explicitly asks to inspect the template.
-6. Create a draft PR automatically with `gh pr create --draft --base <base-branch> --head <branch-name> --title '<pr-title>' --body-file <pr-body-file>` unless the user explicitly requests a ready-for-review PR.
+6. Create an open ready-for-review PR automatically with `gh pr create --base <base-branch> --head <branch-name> --title '<pr-title>' --body-file <pr-body-file>`. Do not create draft PRs.
 7. When a PR already exists, update its title or body with `gh pr edit`.
 
 ## Examples
