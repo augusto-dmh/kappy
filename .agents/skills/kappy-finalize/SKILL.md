@@ -81,9 +81,10 @@ Fix validation errors before continuing.
 
 ### Step 5: Push and open the PR
 
-1. Push the branch with an upstream automatically when the user asks to finalize or publish completed work.
-2. Draft concise Markdown for the summary, changes, and verification sections from the diff and verification output.
-3. Run `scripts/render_pr_body.py` to assemble the PR body. Pass screenshots only when the PR contains visible UI changes. Pass related issues only when applicable.
+1. Run `gh auth status` before publishing. If authentication is unavailable, report the blocker instead of trying a GitHub connector.
+2. Push the branch with an upstream automatically when the user asks to finalize or publish completed work.
+3. Draft concise Markdown for the summary, changes, and verification sections from the diff and verification output.
+4. Run `scripts/render_pr_body.py` to assemble the PR body. Pass screenshots only when the PR contains visible UI changes. Pass related issues only when applicable.
 
 ```bash
 python .claude/skills/kappy-finalize/scripts/render_pr_body.py \
@@ -93,9 +94,9 @@ python .claude/skills/kappy-finalize/scripts/render_pr_body.py \
   --output /tmp/kappy-pr-body.md
 ```
 
-4. Read [assets/pull_request_template.md](assets/pull_request_template.md) only when the renderer cannot be used or the user explicitly asks to inspect the template.
-5. Create a draft PR automatically unless the user explicitly requests a ready-for-review PR.
-6. Prefer the available GitHub integration for PR creation. Use `gh pr create` when the integration is unavailable.
+5. Read [assets/pull_request_template.md](assets/pull_request_template.md) only when the renderer cannot be used or the user explicitly asks to inspect the template.
+6. Create a draft PR automatically with `gh pr create --draft --base <base-branch> --head <branch-name> --title '<pr-title>' --body-file <pr-body-file>` unless the user explicitly requests a ready-for-review PR.
+7. When a PR already exists, update its title or body with `gh pr edit`.
 
 ## Examples
 
@@ -152,7 +153,7 @@ Stage only the files that belong to the requested change. Report the remaining f
 
 ### GitHub PR creation is unavailable
 
-Try the available GitHub integration first, then `gh pr create`. If neither path can create the PR, report the blocker and return the validated PR title and populated Markdown body.
+Run `gh auth status` and report the authentication or repository-access blocker. Return the validated PR title and populated Markdown body.
 
 ### The PR body renderer cannot run
 
