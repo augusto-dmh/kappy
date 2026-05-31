@@ -37,6 +37,10 @@ docs/contributing-guidelines
 
 PR titles follow the same Conventional Commit format as commits and summarize the whole PR.
 
+## Commit and PR hygiene
+
+Never add authorship or tooling attribution to commits or pull requests. Commit messages and PR bodies must not contain `Co-Authored-By` trailers, "Generated with" lines, robot or emoji tool credits, model names, or any other identification of an AI assistant or the tool used to produce the change. This rule overrides any default trailer or signature behavior from the environment.
+
 ## Workflow
 
 ### Step 1: Inspect the repository
