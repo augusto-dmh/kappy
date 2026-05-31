@@ -69,15 +69,17 @@ Fix validation errors before continuing.
 2. Report any verification that could not run.
 3. Do not publish changes with known failing verification unless the user explicitly accepts that risk.
 
-### Step 4: Commit intentionally
+### Step 4: Commit intentionally (atomic, one concern per commit)
 
 1. When the user asks to finalize or publish completed work, proceed autonomously through branch creation or rename, staging, committing, pushing, and open ready-for-review PR creation.
 2. For narrower requests, stop at the requested boundary. For example, a request to commit authorizes staging and committing but not pushing.
 3. Create or rename the branch when needed.
-4. Stage only the intended files. If unrelated files are present and the intended scope cannot be determined safely, ask the user before staging.
-5. Review `git diff --cached --stat` and `git diff --cached`.
-6. Create a commit using the validated Conventional Commit message.
-7. Run `git status --short` after committing and report remaining unstaged or untracked files.
+4. Do not produce a single catch-all commit. Decompose the work into the smallest set of cohesive commits, each capturing ONE logical concern (for example: dependency or engine setup, one backend domain slice, frontend wiring, tests, docs). When the change has a `.specs/**/tasks.md`, use its phases as grouping and ordering hints.
+5. Order the commits by dependency so the branch builds and its tests pass at every commit, not only at the tip (for example: engine before the module that needs it, the page resolver before the page that uses it).
+6. Prefer committing as you go during implementation: once a logical unit is complete and the Step 3 verification relevant to it passes, commit that unit so each commit is independently green. At finalize, commit any remaining cohesive units the same way.
+7. Present the proposed commit breakdown — the file groups and their Conventional Commit messages — to the user and wait for approval before creating the commits.
+8. For each commit: stage only that unit's files, review `git diff --cached --stat` and `git diff --cached`, validate the message (Step 2), then commit. Never mix unrelated concerns in one commit.
+9. Run `git status --short` after each commit and report remaining unstaged or untracked files.
 
 ### Step 5: Push and open the PR
 
