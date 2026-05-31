@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
 import prettier from 'eslint-config-prettier/flat';
+import boundaries from 'eslint-plugin-boundaries';
 import importPlugin from 'eslint-plugin-import';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -115,6 +116,58 @@ export default [
             'resources/js/routes/**',
             'resources/js/wayfinder/**',
         ],
+    },
+    {
+        plugins: {
+            boundaries,
+        },
+        settings: {
+            'boundaries/include': [
+                'resources/js/**/*',
+                'app-modules/*/resources/js/**/*',
+            ],
+            'boundaries/elements': [
+                {
+                    type: 'shared',
+                    pattern: 'resources/js/**/*',
+                    mode: 'full',
+                },
+                {
+                    type: 'module',
+                    pattern: 'app-modules/*/resources/js/**/*',
+                    mode: 'full',
+                    capture: ['moduleName'],
+                },
+            ],
+        },
+        rules: {
+            'boundaries/dependencies': [
+                'error',
+                {
+                    default: 'disallow',
+                    rules: [
+                        {
+                            from: { type: 'shared' },
+                            allow: { to: { type: 'shared' } },
+                        },
+                        {
+                            from: { type: 'module' },
+                            allow: [
+                                { to: { type: 'shared' } },
+                                {
+                                    to: {
+                                        type: 'module',
+                                        captured: { moduleName: '{{from.captured.moduleName}}' },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+            'boundaries/no-unknown': 'off',
+            'boundaries/no-unknown-files': 'off',
+        },
     },
     prettier,
     {
