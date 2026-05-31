@@ -36,8 +36,16 @@
 
         @fonts
 
+        @php
+            // Resolve the page component to its source entry for Vite preloading.
+            // Module pages use the `module::page` convention and live under
+            // app-modules/<module>/resources/js/pages/<page>.tsx (mirrors resources/js/app.tsx).
+            $pageEntry = str_contains($page['component'], '::')
+                ? 'app-modules/'.str_replace('::', '/resources/js/pages/', $page['component']).'.tsx'
+                : "resources/js/pages/{$page['component']}.tsx";
+        @endphp
         @viteReactRefresh
-        @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
+        @vite(['resources/css/app.css', 'resources/js/app.tsx', $pageEntry])
         <x-inertia::head>
             <title>{{ config('app.name', 'Laravel') }}</title>
         </x-inertia::head>
