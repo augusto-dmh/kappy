@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c883e045c5f8145c9bd83869aba18860",
+    "content-hash": "4ac0edb52b345267f3f365f7a1ffb896",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -3410,6 +3410,38 @@
                     "Modules\\Catalog\\Tests\\": "tests/",
                     "Modules\\Catalog\\Database\\Factories\\": "database/factories/",
                     "Modules\\Catalog\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "modules/identity",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/identity",
+                "reference": "79fa0a1f044578b84b25d4f705e528ae1192c8ca"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\Identity\\Providers\\IdentityServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\Identity\\": "src/",
+                    "Modules\\Identity\\Tests\\": "tests/",
+                    "Modules\\Identity\\Database\\Factories\\": "database/factories/",
+                    "Modules\\Identity\\Database\\Seeders\\": "database/seeders/"
                 }
             },
             "license": [
