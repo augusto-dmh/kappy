@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "11aca979c1b2ab8918c863fbd1ef77c7",
+    "content-hash": "7bf4f2c9a5a05ef9989271855f8ba7d6",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -3622,6 +3622,38 @@
                     "Modules\\Catalog\\Tests\\": "tests/",
                     "Modules\\Catalog\\Database\\Factories\\": "database/factories/",
                     "Modules\\Catalog\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "modules/github-app",
+            "version": "1.0",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/github-app",
+                "reference": "35ddd3ea6dc74c5e2fd1ccfc741a000382164762"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\GitHubApp\\Providers\\GitHubAppServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\GitHubApp\\": "src/",
+                    "Modules\\GitHubApp\\Tests\\": "tests/",
+                    "Modules\\GitHubApp\\Database\\Factories\\": "database/factories/",
+                    "Modules\\GitHubApp\\Database\\Seeders\\": "database/seeders/"
                 }
             },
             "license": [
