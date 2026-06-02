@@ -41,4 +41,12 @@ return [
         'redirect' => env('GITHUB_REDIRECT_URI'),
     ],
 
+    'github-app' => [
+        'app_id' => env('GITHUB_APP_ID'),
+        'private_key' => env('GITHUB_APP_PRIVATE_KEY'),
+        'webhook_secret' => env('GITHUB_APP_WEBHOOK_SECRET'),
+        'client_id' => env('GITHUB_APP_CLIENT_ID'),
+        'client_secret' => env('GITHUB_APP_CLIENT_SECRET'),
+    ],
+
 ];
