@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\GitHubApp\Models\Installation;
 use Modules\Identity\Database\Factories\AccountFactory;
 use Modules\Identity\Enums\AccountType;
 
@@ -55,5 +56,15 @@ class Account extends Model
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);
+    }
+
+    /**
+     * The GitHub App installations recorded against this account.
+     *
+     * @return HasMany<Installation, $this>
+     */
+    public function installations(): HasMany
+    {
+        return $this->hasMany(Installation::class);
     }
 }
