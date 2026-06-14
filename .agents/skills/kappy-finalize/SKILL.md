@@ -98,10 +98,10 @@ Adds the webhook receiver: signature verification, idempotent recording, and fas
 2. Add a scope only when it improves clarity, such as `auth`, `billing`, or `ci`.
 3. Write an imperative summary that describes the outcome, not the implementation mechanics.
 4. Derive the branch name from the same primary change.
-5. Run:
+5. Run the validator. Invoke it by path — the helper scripts are executable and carry a `#!/usr/bin/env python3` shebang, so call them directly with no `python`/`python3` prefix (this resolves the interpreter wherever it lives and avoids the `python` vs `python3` naming trap):
 
 ```bash
-python3 .claude/skills/kappy-finalize/scripts/validate_metadata.py \
+.claude/skills/kappy-finalize/scripts/validate_metadata.py \
   --branch '<branch-name>' \
   --commit '<commit-message>' \
   --pr-title '<pr-title>'
@@ -136,7 +136,7 @@ Fix validation errors before continuing.
 5. Run `scripts/render_pr_body.py` to assemble the skeleton's sections into the final body, omitting unused optional sections. Pass `--extra-changes-file` only when the branch bundles work unrelated to its primary purpose. Pass screenshots only when the PR contains visible UI changes. Pass related issues only when applicable.
 
 ```bash
-python3 .claude/skills/kappy-finalize/scripts/render_pr_body.py \
+.claude/skills/kappy-finalize/scripts/render_pr_body.py \
   --summary-file /tmp/kappy-pr-summary.md \
   --changes-file /tmp/kappy-pr-changes.md \
   --verification-file /tmp/kappy-pr-verification.md \
@@ -144,7 +144,14 @@ python3 .claude/skills/kappy-finalize/scripts/render_pr_body.py \
 ```
 
 6. Create an open ready-for-review PR automatically with `gh pr create --base <base-branch> --head <branch-name> --title '<pr-title>' --body-file <pr-body-file>`. Do not create draft PRs.
-7. When a PR already exists, update its title or body with `gh pr edit`. If `gh pr edit` fails on this repo's deprecated Projects-classic GraphQL field, fall back to the REST API: `gh api -X PATCH repos/<owner>/<repo>/pulls/<number> -f body="$(cat <pr-body-file>)"`.
+7. When a PR already exists, update its body (or title) through the REST endpoint — this is the stable, documented path:
+
+```bash
+gh api -X PATCH repos/<owner>/<repo>/pulls/<number> \
+  -f body="$(cat <pr-body-file>)"
+```
+
+Do not use `gh pr edit` to update a PR: it currently aborts on GitHub's deprecated Projects-classic GraphQL field even with no project flags (cli/cli #11983). The REST call hits the same official "Update a pull request" API that `gh pr edit` wraps, without the broken GraphQL query. (`gh pr create` is unaffected and stays the way to open the PR.)
 
 ## Examples
 
