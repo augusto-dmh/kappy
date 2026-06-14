@@ -67,6 +67,22 @@ PR3 of the GitHub App feature (Phase 2). Implements T9 and T10 (GHAPP-06/07/08);
 Adds the webhook receiver: signature verification, idempotent recording, and fast enqueue. Turning recorded deliveries into installation and pull-request records is handled separately and is not part of this change.
 ```
 
+**Base the Changes subsections on the spec tasks the PR implements.** When the PR carries `.specs/**/tasks.md` tasks, those tasks are the basis for the subsections: give each cohesive behavior its own subsection, merging tightly-coupled tasks that together deliver one user-visible behavior and splitting only along task lines. Title every subsection by the behavior it delivers, never by its task identifier — this is how the task breakdown shapes the structure without leaking planning artifacts.
+
+```text
+[bad — titled by spec task identifiers]
+## Changes
+**T9 — verify github webhook signatures**
+**T10 — persist, dedupe, and enqueue deliveries**
+
+[good — task-based subsections, each titled by its cohesive behavior]
+## Changes
+**Signature verification**
+**Persist, dedupe, and enqueue**
+```
+
+**Use the optional `## Extra changes` section only for work unrelated to the PR's primary purpose** — incidental tooling or documentation fixes made along the way. Describe them by behavior and flag them as tangential; prefer a separate PR when the unrelated work is substantial; omit the section entirely for single-purpose branches.
+
 ## Workflow
 
 ### Step 1: Inspect the repository
@@ -117,7 +133,7 @@ Fix validation errors before continuing.
 2. Push the branch with an upstream automatically when the user asks to finalize or publish completed work.
 3. Read [assets/pull_request_template.md](assets/pull_request_template.md) to get the section skeleton — the section names, their order, and which sections are optional. It is structure only; follow the **PR body conventions** above for how to write each section.
 4. Draft concise Markdown for the summary, changes, and verification sections from the diff and verification output, following the **PR body conventions** (natural-paragraph prose; behavior, not planning artifacts).
-5. Run `scripts/render_pr_body.py` to assemble the skeleton's sections into the final body, omitting unused optional sections. Pass screenshots only when the PR contains visible UI changes. Pass related issues only when applicable.
+5. Run `scripts/render_pr_body.py` to assemble the skeleton's sections into the final body, omitting unused optional sections. Pass `--extra-changes-file` only when the branch bundles work unrelated to its primary purpose. Pass screenshots only when the PR contains visible UI changes. Pass related issues only when applicable.
 
 ```bash
 python3 .claude/skills/kappy-finalize/scripts/render_pr_body.py \
