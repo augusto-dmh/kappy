@@ -41,6 +41,32 @@ PR titles follow the same Conventional Commit format as commits and summarize th
 
 Never add authorship or tooling attribution to commits or pull requests. Commit messages and PR bodies must not contain `Co-Authored-By` trailers, "Generated with" lines, robot or emoji tool credits, model names, or any other identification of an AI assistant or the tool used to produce the change. This rule overrides any default trailer or signature behavior from the environment.
 
+## PR body conventions
+
+The pull request template at `assets/pull_request_template.md` is a skeleton only — it defines the section names, their order, and which sections are optional. Every convention for *how* to write a section lives here, not in the template.
+
+**Write prose as natural paragraphs.** Use one unwrapped line per paragraph, separated by blank lines. Never insert manual line breaks mid-paragraph — let GitHub wrap the text. Hard-wrapped prose renders as ragged, prematurely-broken lines.
+
+```text
+[bad — hard-wrapped mid-paragraph]
+Adds the inbound webhook receiver. Every delivery is
+authenticated, recorded, and queued so GitHub gets a
+fast acknowledgement.
+
+[good — one flowing line per paragraph]
+Adds the inbound webhook receiver. Every delivery is authenticated, recorded, and queued so GitHub gets a fast acknowledgement.
+```
+
+**Describe observable behavior, never internal planning artifacts.** Do not reference task identifiers, PR sequence numbers, phase names, or requirement IDs (for example `T9`, `PR3`, `Phase 2`, `GHAPP-06`). State scope boundaries as behavior, not as pointers to the plan — a reviewer reads the PR, not the spec.
+
+```text
+[bad — leaks the plan]
+PR3 of the GitHub App feature (Phase 2). Implements T9 and T10 (GHAPP-06/07/08); handlers land in PR4.
+
+[good — behavior only]
+Adds the webhook receiver: signature verification, idempotent recording, and fast enqueue. Turning recorded deliveries into installation and pull-request records is handled separately and is not part of this change.
+```
+
 ## Workflow
 
 ### Step 1: Inspect the repository
@@ -59,7 +85,7 @@ Never add authorship or tooling attribution to commits or pull requests. Commit 
 5. Run:
 
 ```bash
-python .claude/skills/kappy-finalize/scripts/validate_metadata.py \
+python3 .claude/skills/kappy-finalize/scripts/validate_metadata.py \
   --branch '<branch-name>' \
   --commit '<commit-message>' \
   --pr-title '<pr-title>'
@@ -89,20 +115,20 @@ Fix validation errors before continuing.
 
 1. Run `gh auth status` before publishing. If authentication is unavailable, report the blocker instead of trying a GitHub connector.
 2. Push the branch with an upstream automatically when the user asks to finalize or publish completed work.
-3. Draft concise Markdown for the summary, changes, and verification sections from the diff and verification output.
-4. Run `scripts/render_pr_body.py` to assemble the PR body. Pass screenshots only when the PR contains visible UI changes. Pass related issues only when applicable.
+3. Read [assets/pull_request_template.md](assets/pull_request_template.md) to get the section skeleton — the section names, their order, and which sections are optional. It is structure only; follow the **PR body conventions** above for how to write each section.
+4. Draft concise Markdown for the summary, changes, and verification sections from the diff and verification output, following the **PR body conventions** (natural-paragraph prose; behavior, not planning artifacts).
+5. Run `scripts/render_pr_body.py` to assemble the skeleton's sections into the final body, omitting unused optional sections. Pass screenshots only when the PR contains visible UI changes. Pass related issues only when applicable.
 
 ```bash
-python .claude/skills/kappy-finalize/scripts/render_pr_body.py \
+python3 .claude/skills/kappy-finalize/scripts/render_pr_body.py \
   --summary-file /tmp/kappy-pr-summary.md \
   --changes-file /tmp/kappy-pr-changes.md \
   --verification-file /tmp/kappy-pr-verification.md \
   --output /tmp/kappy-pr-body.md
 ```
 
-5. Read [assets/pull_request_template.md](assets/pull_request_template.md) only when the renderer cannot be used or the user explicitly asks to inspect the template.
 6. Create an open ready-for-review PR automatically with `gh pr create --base <base-branch> --head <branch-name> --title '<pr-title>' --body-file <pr-body-file>`. Do not create draft PRs.
-7. When a PR already exists, update its title or body with `gh pr edit`.
+7. When a PR already exists, update its title or body with `gh pr edit`. If `gh pr edit` fails on this repo's deprecated Projects-classic GraphQL field, fall back to the REST API: `gh api -X PATCH repos/<owner>/<repo>/pulls/<number> -f body="$(cat <pr-body-file>)"`.
 
 ## Examples
 
