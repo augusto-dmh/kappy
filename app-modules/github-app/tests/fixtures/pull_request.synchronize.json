@@ -1,0 +1,28 @@
+{
+  "action": "synchronize",
+  "number": 42,
+  "pull_request": {
+    "number": 42,
+    "title": "feat: add a new feature",
+    "user": {
+      "login": "contributor"
+    },
+    "base": {
+      "sha": "aabbccddaabbccddaabbccddaabbccddaabbccdd",
+      "ref": "main"
+    },
+    "head": {
+      "sha": "99887766998877669988776699887766aabbccdd",
+      "ref": "feat/add-feature"
+    },
+    "merged": false,
+    "state": "open"
+  },
+  "repository": {
+    "id": 100000001,
+    "full_name": "testuser/repo-one"
+  },
+  "installation": {
+    "id": 12345678
+  }
+}

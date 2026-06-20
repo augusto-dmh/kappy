@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Modules\GitHubApp\Actions\HandleInstallationEvent;
 use Modules\GitHubApp\Actions\HandleInstallationRepositoriesEvent;
+use Modules\GitHubApp\Actions\HandlePullRequestEvent;
 use Modules\GitHubApp\Models\WebhookEvent;
 
 class ProcessGithubWebhook implements ShouldBeUnique, ShouldQueue
@@ -37,10 +38,12 @@ class ProcessGithubWebhook implements ShouldBeUnique, ShouldQueue
     public function handle(
         HandleInstallationEvent $installationHandler,
         HandleInstallationRepositoriesEvent $installationReposHandler,
+        HandlePullRequestEvent $pullRequestHandler,
     ): void {
         match ($this->event) {
             'installation' => $installationHandler->execute($this->payload),
             'installation_repositories' => $installationReposHandler->execute($this->payload),
+            'pull_request' => $pullRequestHandler->execute($this->payload),
             default => null,
         };
 
