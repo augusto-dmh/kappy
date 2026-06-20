@@ -55,6 +55,22 @@ test('a correctly signed delivery is not rejected', function () {
     ])->assertSuccessful();
 });
 
+test('a delivery is rejected when the webhook secret is not configured', function (mixed $secret) {
+    config()->set('services.github-app.webhook_secret', $secret);
+
+    // A signature forged against the empty secret must still be rejected — the
+    // verifier must never compute the HMAC with an empty key (fail closed).
+    postWebhook('{"action":"created"}', [
+        'X-Hub-Signature-256' => 'sha256='.hash_hmac('sha256', '{"action":"created"}', ''),
+    ])->assertUnauthorized();
+
+    expect(WebhookEvent::count())->toBe(0);
+    Queue::assertNothingPushed();
+})->with([
+    'empty string' => [''],
+    'null' => [null],
+]);
+
 // --- T10: persist, dedupe, enqueue ---
 
 test('a verified delivery persists one event, enqueues the job, and acks 202', function () {

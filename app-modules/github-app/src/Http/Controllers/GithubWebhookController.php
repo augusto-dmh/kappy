@@ -67,11 +67,13 @@ class GithubWebhookController
             return false;
         }
 
-        $expected = 'sha256='.hash_hmac(
-            'sha256',
-            $request->getContent(),
-            (string) config('services.github-app.webhook_secret'),
-        );
+        $secret = (string) config('services.github-app.webhook_secret');
+
+        if ($secret === '') {
+            return false;
+        }
+
+        $expected = 'sha256='.hash_hmac('sha256', $request->getContent(), $secret);
 
         return hash_equals($expected, $signature);
     }
