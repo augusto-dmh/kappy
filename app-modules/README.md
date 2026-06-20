@@ -57,7 +57,7 @@ app-modules/<name>/
 ### Key conventions:
 
 - **Namespace**: `Modules\<Name>\` (auto-configured in `composer.json`).
-- **Routes file**: `routes/<name>-routes.php`. Must explicitly wrap routes in `['web']` middleware group.
+- **Routes file**: `routes/<name>-routes.php`. Must explicitly wrap routes in `['web']` middleware group. Exception: server-to-server endpoints (e.g. webhook receivers) are declared OUTSIDE `['web']` on purpose, so they carry no session/CSRF/Inertia middleware — see `github-app/routes/github-app-routes.php`.
 - **Models**: Live in `src/Models/`.
 - **Controllers**: Live in `src/Http/Controllers/`.
 - **Tests**: Discovery via PHPUnit `Modules` testsuite; place tests in `tests/Feature/`.

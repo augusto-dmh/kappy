@@ -41,6 +41,48 @@ PR titles follow the same Conventional Commit format as commits and summarize th
 
 Never add authorship or tooling attribution to commits or pull requests. Commit messages and PR bodies must not contain `Co-Authored-By` trailers, "Generated with" lines, robot or emoji tool credits, model names, or any other identification of an AI assistant or the tool used to produce the change. This rule overrides any default trailer or signature behavior from the environment.
 
+## PR body conventions
+
+The pull request template at `assets/pull_request_template.md` is a skeleton only — it defines the section names, their order, and which sections are optional. Every convention for *how* to write a section lives here, not in the template.
+
+**Write prose as natural paragraphs.** Use one unwrapped line per paragraph, separated by blank lines. Never insert manual line breaks mid-paragraph — let GitHub wrap the text. Hard-wrapped prose renders as ragged, prematurely-broken lines.
+
+```text
+[bad — hard-wrapped mid-paragraph]
+Adds the inbound webhook receiver. Every delivery is
+authenticated, recorded, and queued so GitHub gets a
+fast acknowledgement.
+
+[good — one flowing line per paragraph]
+Adds the inbound webhook receiver. Every delivery is authenticated, recorded, and queued so GitHub gets a fast acknowledgement.
+```
+
+**Describe observable behavior, never internal planning artifacts.** Do not reference task identifiers, PR sequence numbers, phase names, or requirement IDs (for example `T9`, `PR3`, `Phase 2`, `GHAPP-06`). State scope boundaries as behavior, not as pointers to the plan — a reviewer reads the PR, not the spec.
+
+```text
+[bad — leaks the plan]
+PR3 of the GitHub App feature (Phase 2). Implements T9 and T10 (GHAPP-06/07/08); handlers land in PR4.
+
+[good — behavior only]
+Adds the webhook receiver: signature verification, idempotent recording, and fast enqueue. Turning recorded deliveries into installation and pull-request records is handled separately and is not part of this change.
+```
+
+**Base the Changes subsections on the spec tasks the PR implements.** When the PR carries `.specs/**/tasks.md` tasks, those tasks are the basis for the subsections: give each cohesive behavior its own subsection, merging tightly-coupled tasks that together deliver one user-visible behavior and splitting only along task lines. Title every subsection by the behavior it delivers, never by its task identifier — this is how the task breakdown shapes the structure without leaking planning artifacts.
+
+```text
+[bad — titled by spec task identifiers]
+## Changes
+**T9 — verify github webhook signatures**
+**T10 — persist, dedupe, and enqueue deliveries**
+
+[good — task-based subsections, each titled by its cohesive behavior]
+## Changes
+**Signature verification**
+**Persist, dedupe, and enqueue**
+```
+
+**Use the optional `## Extra changes` section only for work unrelated to the PR's primary purpose** — incidental tooling or documentation fixes made along the way. Describe them by behavior and flag them as tangential; prefer a separate PR when the unrelated work is substantial; omit the section entirely for single-purpose branches.
+
 ## Workflow
 
 ### Step 1: Inspect the repository
@@ -56,10 +98,10 @@ Never add authorship or tooling attribution to commits or pull requests. Commit 
 2. Add a scope only when it improves clarity, such as `auth`, `billing`, or `ci`.
 3. Write an imperative summary that describes the outcome, not the implementation mechanics.
 4. Derive the branch name from the same primary change.
-5. Run:
+5. Run the validator. Invoke it by path — the helper scripts are executable and carry a `#!/usr/bin/env python3` shebang, so call them directly with no `python`/`python3` prefix (this resolves the interpreter wherever it lives and avoids the `python` vs `python3` naming trap):
 
 ```bash
-python .claude/skills/kappy-finalize/scripts/validate_metadata.py \
+.claude/skills/kappy-finalize/scripts/validate_metadata.py \
   --branch '<branch-name>' \
   --commit '<commit-message>' \
   --pr-title '<pr-title>'
@@ -89,20 +131,27 @@ Fix validation errors before continuing.
 
 1. Run `gh auth status` before publishing. If authentication is unavailable, report the blocker instead of trying a GitHub connector.
 2. Push the branch with an upstream automatically when the user asks to finalize or publish completed work.
-3. Draft concise Markdown for the summary, changes, and verification sections from the diff and verification output.
-4. Run `scripts/render_pr_body.py` to assemble the PR body. Pass screenshots only when the PR contains visible UI changes. Pass related issues only when applicable.
+3. Read [assets/pull_request_template.md](assets/pull_request_template.md) to get the section skeleton — the section names, their order, and which sections are optional. It is structure only; follow the **PR body conventions** above for how to write each section.
+4. Draft concise Markdown for the summary, changes, and verification sections from the diff and verification output, following the **PR body conventions** (natural-paragraph prose; behavior, not planning artifacts).
+5. Run `scripts/render_pr_body.py` to assemble the skeleton's sections into the final body, omitting unused optional sections. Pass `--extra-changes-file` only when the branch bundles work unrelated to its primary purpose. Pass screenshots only when the PR contains visible UI changes. Pass related issues only when applicable.
 
 ```bash
-python .claude/skills/kappy-finalize/scripts/render_pr_body.py \
+.claude/skills/kappy-finalize/scripts/render_pr_body.py \
   --summary-file /tmp/kappy-pr-summary.md \
   --changes-file /tmp/kappy-pr-changes.md \
   --verification-file /tmp/kappy-pr-verification.md \
   --output /tmp/kappy-pr-body.md
 ```
 
-5. Read [assets/pull_request_template.md](assets/pull_request_template.md) only when the renderer cannot be used or the user explicitly asks to inspect the template.
 6. Create an open ready-for-review PR automatically with `gh pr create --base <base-branch> --head <branch-name> --title '<pr-title>' --body-file <pr-body-file>`. Do not create draft PRs.
-7. When a PR already exists, update its title or body with `gh pr edit`.
+7. When a PR already exists, update its body (or title) through the REST endpoint — this is the stable, documented path:
+
+```bash
+gh api -X PATCH repos/<owner>/<repo>/pulls/<number> \
+  -f body="$(cat <pr-body-file>)"
+```
+
+Do not use `gh pr edit` to update a PR: it currently aborts on GitHub's deprecated Projects-classic GraphQL field even with no project flags (cli/cli #11983). The REST call hits the same official "Update a pull request" API that `gh pr edit` wraps, without the broken GraphQL query. (`gh pr create` is unaffected and stays the way to open the PR.)
 
 ## Examples
 
