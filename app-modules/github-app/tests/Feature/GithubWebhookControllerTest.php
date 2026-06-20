@@ -98,6 +98,12 @@ test('a verified delivery persists one event, enqueues the job, and acks 202', f
 
     Queue::assertPushedOn('webhooks', ProcessGithubWebhook::class);
     Queue::assertPushed(ProcessGithubWebhook::class, 1);
+    Queue::assertPushed(ProcessGithubWebhook::class, function (ProcessGithubWebhook $job) {
+        return $job->event === 'installation'
+            && $job->deliveryId === 'd-100'
+            && $job->payload['action'] === 'created'
+            && data_get($job->payload, 'installation.id') === 555;
+    });
 });
 
 test('a re-delivered delivery id is an idempotent no-op', function () {
@@ -124,6 +130,16 @@ test('the controller defers all handler work to the queue (fast path)', function
         ->and(PullRequest::count())->toBe(0);
 
     Queue::assertPushed(ProcessGithubWebhook::class, 1);
+});
+
+test('a validly signed non-JSON body is accepted and stores an empty action', function () {
+    postWebhook('not json', [
+        'X-GitHub-Event' => 'ping',
+        'X-GitHub-Delivery' => 'd-malformed',
+    ])->assertAccepted();
+
+    expect(WebhookEvent::count())->toBe(1)
+        ->and(WebhookEvent::first()->action)->toBe('');
 });
 
 test('the event resolves to a known installation when present', function () {
