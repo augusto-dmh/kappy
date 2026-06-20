@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Route;
 use Modules\GitHubApp\Jobs\ProcessGithubWebhook;
 use Modules\GitHubApp\Models\Installation;
 use Modules\GitHubApp\Models\PullRequest;
@@ -70,6 +71,15 @@ test('a delivery is rejected when the webhook secret is not configured', functio
     'empty string' => [''],
     'null' => [null],
 ]);
+
+test('the webhook route is rate limited', function () {
+    $route = collect(Route::getRoutes())
+        ->first(fn ($route) => $route->getName() === 'webhooks.github');
+
+    expect($route)->not->toBeNull()
+        ->and(collect($route->gatherMiddleware())->contains(fn ($m) => str_contains((string) $m, 'throttle')))
+        ->toBeTrue();
+});
 
 // --- T10: persist, dedupe, enqueue ---
 
