@@ -94,3 +94,14 @@ test('out-of-order synchronize for a non-existent pr creates it with state Open'
         ->and(PullRequest::first()->state)->toBe(PullRequestState::Open)
         ->and(PullRequest::first()->head_sha)->toBe('99887766998877669988776699887766aabbccdd');
 });
+
+test('a non-closed action (edited) on a merged pull request preserves the Merged state', function () {
+    makeRepo();
+
+    (new HandlePullRequestEvent)->execute(prFixture('pull_request.opened'));
+    (new HandlePullRequestEvent)->execute(prFixture('pull_request.closed_merged'));
+    (new HandlePullRequestEvent)->execute(prFixture('pull_request.edited'));
+
+    expect(PullRequest::count())->toBe(1)
+        ->and(PullRequest::first()->state)->toBe(PullRequestState::Merged);
+});

@@ -16,13 +16,15 @@ class HandlePullRequestEvent
             return;
         }
 
-        $action = (string) data_get($payload, 'action');
         $prNumber = (int) data_get($payload, 'pull_request.number');
 
-        $state = match ($action) {
-            'closed' => data_get($payload, 'pull_request.merged') === true
-                ? PullRequestState::Merged
-                : PullRequestState::Closed,
+        // Derive state from the PR payload, which is present on every delivery,
+        // rather than the webhook action. GitHub fires `pull_request` for ~20
+        // actions (edited, labeled, ...); keying off the action would revert an
+        // already Closed/Merged PR back to Open on any non-`closed` delivery.
+        $state = match (true) {
+            data_get($payload, 'pull_request.merged') === true => PullRequestState::Merged,
+            data_get($payload, 'pull_request.state') === 'closed' => PullRequestState::Closed,
             default => PullRequestState::Open,
         };
 
