@@ -21,7 +21,7 @@ class ProcessGithubWebhook implements ShouldBeUnique, ShouldQueue
 
     /**
      * Best-effort dispatch dedupe; the `webhook_events` unique constraint is the
-     * authoritative idempotency guarantee (this lock releases when the job starts).
+     * authoritative idempotency guarantee (this lock is held until the job finishes).
      */
     public function uniqueId(): string
     {
