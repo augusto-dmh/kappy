@@ -21,4 +21,7 @@ Route::middleware(['web', 'auth', 'verified'])->group(function (): void {
 
     Route::get('/repositories', [RepositoryController::class, 'index'])
         ->name('repositories.index');
+
+    Route::patch('/repositories/{repository}', [RepositoryController::class, 'update'])
+        ->name('repositories.update');
 });
