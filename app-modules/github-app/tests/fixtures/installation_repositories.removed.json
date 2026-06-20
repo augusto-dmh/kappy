@@ -1,0 +1,16 @@
+{
+  "action": "removed",
+  "installation": {
+    "id": 12345678,
+    "repository_selection": "selected"
+  },
+  "repositories_added": [],
+  "repositories_removed": [
+    {
+      "id": 100000001,
+      "name": "repo-one",
+      "full_name": "testuser/repo-one",
+      "private": false
+    }
+  ]
+}

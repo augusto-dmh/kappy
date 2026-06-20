@@ -1,0 +1,16 @@
+{
+  "action": "added",
+  "installation": {
+    "id": 12345678,
+    "repository_selection": "selected"
+  },
+  "repositories_added": [
+    {
+      "id": 100000003,
+      "name": "repo-three",
+      "full_name": "testuser/repo-three",
+      "private": false
+    }
+  ],
+  "repositories_removed": []
+}
