@@ -1,0 +1,13 @@
+{
+  "action": "suspend",
+  "installation": {
+    "id": 12345678,
+    "account": {
+      "id": 11111111,
+      "login": "testuser",
+      "type": "User"
+    },
+    "repository_selection": "selected",
+    "target_type": "User"
+  }
+}

@@ -5,6 +5,10 @@ namespace Modules\GitHubApp\Jobs;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Modules\GitHubApp\Actions\HandleInstallationEvent;
+use Modules\GitHubApp\Actions\HandleInstallationRepositoriesEvent;
+use Modules\GitHubApp\Actions\HandlePullRequestEvent;
+use Modules\GitHubApp\Models\WebhookEvent;
 
 class ProcessGithubWebhook implements ShouldBeUnique, ShouldQueue
 {
@@ -30,11 +34,20 @@ class ProcessGithubWebhook implements ShouldBeUnique, ShouldQueue
 
     /**
      * Route the delivery to its event handler.
-     *
-     * Stub for this phase — installation/repository/pull-request handlers land in PR4 (T11–T12).
      */
-    public function handle(): void
-    {
-        //
+    public function handle(
+        HandleInstallationEvent $installationHandler,
+        HandleInstallationRepositoriesEvent $installationReposHandler,
+        HandlePullRequestEvent $pullRequestHandler,
+    ): void {
+        match ($this->event) {
+            'installation' => $installationHandler->execute($this->payload),
+            'installation_repositories' => $installationReposHandler->execute($this->payload),
+            'pull_request' => $pullRequestHandler->execute($this->payload),
+            default => null,
+        };
+
+        WebhookEvent::where('github_delivery_id', $this->deliveryId)
+            ->update(['processed_at' => now()]);
     }
 }

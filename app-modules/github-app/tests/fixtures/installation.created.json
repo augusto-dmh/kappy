@@ -1,0 +1,27 @@
+{
+  "action": "created",
+  "installation": {
+    "id": 12345678,
+    "account": {
+      "id": 11111111,
+      "login": "testuser",
+      "type": "User"
+    },
+    "repository_selection": "selected",
+    "target_type": "User"
+  },
+  "repositories": [
+    {
+      "id": 100000001,
+      "name": "repo-one",
+      "full_name": "testuser/repo-one",
+      "private": false
+    },
+    {
+      "id": 100000002,
+      "name": "repo-two",
+      "full_name": "testuser/repo-two",
+      "private": true
+    }
+  ]
+}
