@@ -153,6 +153,10 @@ gh api -X PATCH repos/<owner>/<repo>/pulls/<number> \
 
 Do not use `gh pr edit` to update a PR: it currently aborts on GitHub's deprecated Projects-classic GraphQL field even with no project flags (cli/cli #11983). The REST call hits the same official "Update a pull request" API that `gh pr edit` wraps, without the broken GraphQL query. (`gh pr create` is unaffected and stays the way to open the PR.)
 
+### Step 6: Hand off to manual QA
+
+Once an open ready-for-review PR exists, hand off to the `kappy-manual-qa` skill with the PR number so a grounded manual-QA artifact is generated, run locally, and then committed to the PR or deleted on the user's choice. That skill resolves the PR's diff and writes `tests/qa/<pr_number>-<branch-slug>/QA-<pr_number>-<branch-slug>.md`. Skip this handoff when the user asked only to suggest names, draft a description, or commit without opening a PR (no PR number exists), or when the change has no testable surface (docs/config-only).
+
 ## Examples
 
 ### Feature with UI changes
