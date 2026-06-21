@@ -81,7 +81,7 @@ Adds the webhook receiver: signature verification, idempotent recording, and fas
 **Persist, dedupe, and enqueue**
 ```
 
-**Use the optional `## Extra changes` section only for work unrelated to the PR's primary purpose** — incidental tooling or documentation fixes made along the way. Describe them by behavior and flag them as tangential; prefer a separate PR when the unrelated work is substantial; omit the section entirely for single-purpose branches.
+**Use the optional `## Extra changes` section only for work unrelated to the PR's primary purpose** — incidental tooling or documentation fixes made along the way. Describe them by behavior and flag them as tangential; prefer a separate PR when the unrelated work is substantial; omit the section entirely for single-purpose branches. Give each cohesive unrelated concern its own sub-topic rather than bundling several into one paragraph — a bold sub-heading per concern (the same way `## Changes` is subdivided) when each carries a paragraph of detail, or one bold-led bullet per artifact for a short list. Never run distinct concerns together with semicolons.
 
 ## Workflow
 
@@ -91,6 +91,7 @@ Adds the webhook receiver: signature verification, idempotent recording, and fas
 2. Read the relevant diff before proposing a name.
 3. Identify unrelated working-tree changes and leave them unstaged.
 4. If the task is only to suggest names or draft a PR description, stop before mutating Git state.
+5. When the branch already has an open PR, fetch its current body and commit list (`gh pr view <n> --json body,commits`) and note any commits not yet reflected in the body — those add-ups must be folded in when the body is re-synced (Step 5).
 
 ### Step 2: Choose the metadata
 
@@ -144,7 +145,7 @@ Fix validation errors before continuing.
 ```
 
 6. Create an open ready-for-review PR automatically with `gh pr create --base <base-branch> --head <branch-name> --title '<pr-title>' --body-file <pr-body-file>`. Do not create draft PRs.
-7. When a PR already exists, update its body (or title) through the REST endpoint — this is the stable, documented path:
+7. **When a PR already exists, re-syncing its body is mandatory, not optional.** Any finalize run that adds commits to an already-open PR must end by re-rendering the full body so it reflects every commit now on the branch — folding in-scope add-ups into `## Changes`/`## Verification` and unrelated tooling into `## Extra changes`. A body that omits commits already pushed to the PR is a defect, not optional polish. Update the body (and the title when the PR's overall scope shifted) through the REST endpoint — this is the stable, documented path:
 
 ```bash
 gh api -X PATCH repos/<owner>/<repo>/pulls/<number> \

@@ -44,7 +44,7 @@ git log -p --since='<review createdAt>' -- <path> # inspect the diffs to find th
 }
 ```
 
-`proposed_comment` is the pt-BR follow-up in the exact `disposition-policy.md` format (omit for `FLAG`).
+`proposed_comment` is the pt-BR follow-up in the exact `disposition-policy.md` format (omit for `FLAG`). It is **posted publicly**: cite only public-facing refs (diff files, sibling code, commit SHAs) and write it in plain language — never name internal artifacts (`.specs/**`, skill rule files) or their line numbers. The internal citations that justify the verdict belong in `why` (operator-facing only), not in `proposed_comment`.
 
 ## Calibration
 - Don't inflate severity to justify a comment; an honest `ADIADO` with a real reason is better than a forced `RESOLVED`/`FLAG`.

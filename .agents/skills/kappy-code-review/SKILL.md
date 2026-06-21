@@ -149,4 +149,6 @@ Never edit source from inside this skill. Producing a code fix here is a hard er
 - **Never post to GitHub without an explicit confirmation** in the same turn.
 - **Never echo real PII** (CPF, full name, personal email, phone, address, RG, birth date) in the comment prose. Use placeholders or local-id refs.
 - **One finding per file.** Only `_summary.md` consolidates.
+- **Internal artifacts ground, never cite.** `.specs/**` and skill rule files inform the judgment but must not appear — by name or line number — in any posted comment. Cite only public-facing refs (diff files, sibling code, commit SHAs); translate internal rationale into plain prose.
+- **Write for a developer who doesn't share the internal vocabulary.** Explain the consequence and the *why*; introduce terms before leaning on them; avoid bare jargon/invariant-names. Concise, not shallow.
 - **Never edit source code.** Hand off to `pr-execute` for any fix work.

@@ -95,6 +95,7 @@ The plan JSON shape (the poster validates it):
 - **Never post or resolve before the Step-3 confirmation.**
 - **Never mark `[RESOLVED]`** without a concrete fix commit (auto-detected or user-confirmed). When unsure of the SHA, surface candidates — do not guess.
 - **One follow-up comment per thread**, pt-BR, using the exact `[RESOLVED]`/`[ADIADO]`/`[INVÁLIDO]` formats in `disposition-policy.md`.
+- **Internal artifacts ground, never cite.** Follow-up comments cite only public-facing refs (diff files, sibling code, commit SHAs) in plain language; `.specs/**` and skill rule-file paths/line numbers stay out of the posted text (they may appear only in the operator-facing verdict). See `disposition-policy.md` → Format rules.
 - **Never edit source code.** Real-but-unfixed findings go to `pr-execute`; they get no thread comment here.
 - **Only touch `kappy-review` threads** that are still unresolved.
 

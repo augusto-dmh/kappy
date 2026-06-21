@@ -21,7 +21,8 @@
         "laravel/wayfinder": "^0.1.14",
         "modules/catalog": "*",
         "modules/github-app": "*",
-        "modules/identity": "*"
+        "modules/identity": "*",
+        "modules/review": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24",

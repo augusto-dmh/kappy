@@ -5,8 +5,10 @@ namespace Modules\GitHubApp\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\GitHubApp\Database\Factories\PullRequestFactory;
 use Modules\GitHubApp\Enums\PullRequestState;
+use Modules\Review\Models\Review;
 
 class PullRequest extends Model
 {
@@ -49,5 +51,15 @@ class PullRequest extends Model
     public function repository(): BelongsTo
     {
         return $this->belongsTo(Repository::class);
+    }
+
+    /**
+     * The reviews run against this pull request.
+     *
+     * @return HasMany<Review, $this>
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
     }
 }
