@@ -49,3 +49,11 @@ test('a pull request exposes its reviews', function () {
     expect($pullRequest->reviews)->toHaveCount(1)
         ->and($pullRequest->reviews->first())->toBeInstanceOf(Review::class);
 });
+
+test('deleting a pull request cascades to its reviews', function () {
+    $review = Review::factory()->create();
+
+    $review->pullRequest->delete();
+
+    expect(Review::find($review->id))->toBeNull();
+});
