@@ -79,6 +79,8 @@ test('the envelope escapes injection attempts in the diff without calling the mo
 });
 
 test('it maps a faked structured response to a DraftReview and sends the escaped envelope', function () {
+    config()->set('kappy.review.generator_model', 'claude-opus-4-8');
+
     ReviewAgent::fake([fakeStructuredReview()])->preventStrayPrompts();
 
     $diff = "diff --git a/a.php b/a.php\n+\$x = 1;\n";
