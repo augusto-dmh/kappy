@@ -81,7 +81,7 @@ Adds the webhook receiver: signature verification, idempotent recording, and fas
 **Persist, dedupe, and enqueue**
 ```
 
-**Use the optional `## Extra changes` section only for work unrelated to the PR's primary purpose** — incidental tooling or documentation fixes made along the way. Describe them by behavior and flag them as tangential; prefer a separate PR when the unrelated work is substantial; omit the section entirely for single-purpose branches.
+**Use the optional `## Extra changes` section only for work unrelated to the PR's primary purpose** — incidental tooling or documentation fixes made along the way. Describe them by behavior and flag them as tangential; prefer a separate PR when the unrelated work is substantial; omit the section entirely for single-purpose branches. Give each cohesive unrelated concern its own sub-topic rather than bundling several into one paragraph — a bold sub-heading per concern (the same way `## Changes` is subdivided) when each carries a paragraph of detail, or one bold-led bullet per artifact for a short list. Never run distinct concerns together with semicolons.
 
 ## Workflow
 
