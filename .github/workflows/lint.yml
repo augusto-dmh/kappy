@@ -23,6 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Setup PHP
@@ -38,7 +39,7 @@ jobs:
       - name: Check commit messages
         if: github.event_name == 'pull_request'
         run: |
-          git fetch --no-tags --prune --depth=0 origin "${{ github.base_ref }}"
+          git fetch --no-tags --prune origin "${{ github.base_ref }}"
           python3 scripts/check-commit-message --self-test
           python3 scripts/check-commit-message --range "origin/${{ github.base_ref }}...HEAD"
 
