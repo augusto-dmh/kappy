@@ -1,0 +1,271 @@
+#!/usr/bin/env python3
+"""
+Validate commit messages for Kappy: Conventional Commits + no tooling attribution.
+
+Used by:
+  - .githooks/commit-msg (local, after `git config core.hooksPath .githooks`)
+  - .github/workflows/lint.yml (CI hard gate on pull requests)
+  - agents/skills that shell out before `git commit`
+
+Modes:
+  python3 scripts/check-commit-message path/to/COMMIT_EDITMSG
+  python3 scripts/check-commit-message --message "feat(auth): add login"
+  python3 scripts/check-commit-message --range origin/main...HEAD
+  python3 scripts/check-commit-message --self-test
+
+Exit codes: 0 pass, 1 violation, 2 usage error.
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import subprocess
+import sys
+
+TYPES = [
+    "feat",
+    "fix",
+    "refactor",
+    "docs",
+    "test",
+    "style",
+    "perf",
+    "build",
+    "ci",
+    "chore",
+]
+HEADER_RE = re.compile(
+    r"^(?P<type>\w+)(?:\((?P<scope>[^)]+)\))?(?P<bang>!)?: (?P<desc>.+)$"
+)
+
+# Ban AI/tooling noise that pollutes `git log` / blame navigation.
+ATTRIBUTION_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (
+        re.compile(r"(?im)^co-authored-by:\s*"),
+        "Co-authored-by trailers are forbidden (including Cursor/agent attribution)",
+    ),
+    (
+        re.compile(r"(?im)^made-with:\s*"),
+        "Made-with trailers are forbidden",
+    ),
+    (
+        re.compile(r"(?i)generated with\s+(cursor|claude|copilot|chatgpt|gpt|openai)"),
+        "tooling 'Generated with …' credit lines are forbidden",
+    ),
+    (
+        re.compile(r"(?i)cursoragent@cursor\.com"),
+        "cursoragent@cursor.com attribution is forbidden",
+    ),
+    (
+        re.compile(r"(?i)\bco-authored-by:\s*cursor\b"),
+        "Cursor Co-authored-by attribution is forbidden",
+    ),
+]
+
+
+def normalize_message(message: str) -> list[str]:
+    lines = [ln for ln in message.splitlines() if not ln.lstrip().startswith("#")]
+    while lines and not lines[0].strip():
+        lines.pop(0)
+    return lines
+
+
+def check(message: str) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    lines = normalize_message(message)
+
+    if not lines:
+        return (["empty commit message"], warnings)
+
+    full = "\n".join(lines)
+    for pattern, reason in ATTRIBUTION_PATTERNS:
+        if pattern.search(full):
+            errors.append(reason)
+
+    header = lines[0].rstrip()
+    if len(header) > 72:
+        warnings.append(f"header is {len(header)} chars (>72): {header[:60]}...")
+
+    match = HEADER_RE.match(header)
+    if not match:
+        errors.append(f"header does not match 'type(scope): description': {header!r}")
+        return (errors, warnings)
+
+    ctype = match.group("type")
+    desc = match.group("desc")
+    bang = match.group("bang")
+
+    if ctype not in TYPES:
+        errors.append(f"type '{ctype}' is not one of: {', '.join(TYPES)}")
+    if not desc.strip():
+        errors.append("description is empty")
+    else:
+        if desc[:1].isupper():
+            errors.append(f"description should start lowercase: '{desc[:30]}'")
+        if desc.rstrip().endswith("."):
+            errors.append("description should not end with a period")
+
+    body = "\n".join(lines[1:])
+    breaking_footer = bool(re.search(r"^BREAKING CHANGE:", body, re.MULTILINE))
+    if bang and not breaking_footer:
+        errors.append("'!' breaking marker present but no 'BREAKING CHANGE:' footer")
+
+    return (errors, warnings)
+
+
+def check_range(rev_range: str) -> int:
+    try:
+        completed = subprocess.run(
+            ["git", "log", "--format=%H%x00%B%x00", rev_range],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        print(f"check-commit-message: failed to read range {rev_range!r}: {exc.stderr}", file=sys.stderr)
+        return 2
+
+    raw = completed.stdout
+    if not raw.strip():
+        print(f"check-commit-message: no commits in range {rev_range!r}")
+        return 0
+
+    parts = [p for p in raw.split("\0") if p.strip()]
+    # git log emits sha, body, sha, body, ...
+    failed = 0
+    i = 0
+    while i < len(parts):
+        sha = parts[i].strip()
+        body = parts[i + 1] if i + 1 < len(parts) else ""
+        i += 2
+        errors, warnings = check(body)
+        for warning in warnings:
+            print(f"  WARN  {sha[:8]} {warning}")
+        if errors:
+            failed += 1
+            print(f"\n{sha[:8]} FAIL")
+            for error in errors:
+                print(f"  ERROR {error}")
+            first_line = body.splitlines()[0] if body.strip() else "(empty)"
+            print(f"  message: {first_line}")
+
+    if failed:
+        print(
+            f"\ncheck-commit-message: FAIL ({failed} commit(s) in {rev_range}) — "
+            "strip Co-authored-by / tooling credits; use Conventional Commits."
+        )
+        return 1
+
+    print(f"check-commit-message: OK ({rev_range})")
+    return 0
+
+
+def self_test() -> int:
+    cases: list[tuple[str, bool, str]] = [
+        ("feat(review): enqueue reviews on open", True, "clean conventional"),
+        (
+            "feat(review): enqueue\n\nCo-authored-by: Cursor <cursoragent@cursor.com>\n",
+            False,
+            "cursor co-author",
+        ),
+        (
+            "fix: something\n\nMade-with: Cursor\n",
+            False,
+            "made-with",
+        ),
+        (
+            "chore: sync\n\nGenerated with Claude\n",
+            False,
+            "generated with",
+        ),
+        ("Feat: bad type case header", False, "bad header"),
+        ("feat: Add uppercase desc", False, "uppercase description"),
+    ]
+
+    failed = 0
+    for message, should_pass, label in cases:
+        errors, _warnings = check(message)
+        passed = not errors
+        if passed != should_pass:
+            failed += 1
+            print(f"  SELFTEST FAIL ({label}): expected pass={should_pass}, errors={errors}")
+        else:
+            print(f"  SELFTEST OK   ({label})")
+
+    if failed:
+        print(f"\ncheck-commit-message: self-test FAIL ({failed})")
+        return 1
+    print("check-commit-message: self-test OK")
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="check-commit-message",
+        description="Validate Conventional Commits and reject tooling attribution.",
+    )
+    parser.add_argument(
+        "msgfile",
+        nargs="?",
+        default=None,
+        help="path to a commit message file (as git passes to commit-msg)",
+    )
+    parser.add_argument("--message", default=None, help="commit message string")
+    parser.add_argument(
+        "--range",
+        dest="rev_range",
+        default=None,
+        help="git revision range to validate (e.g. origin/main...HEAD)",
+    )
+    parser.add_argument(
+        "--self-test",
+        action="store_true",
+        help="run built-in assertion cases and exit",
+    )
+    args = parser.parse_args(argv)
+
+    if args.self_test:
+        return self_test()
+
+    if args.rev_range:
+        return check_range(args.rev_range)
+
+    if args.message is not None:
+        message = args.message
+    elif args.msgfile:
+        with open(args.msgfile, encoding="utf-8") as handle:
+            message = handle.read()
+    elif not sys.stdin.isatty():
+        message = sys.stdin.read()
+    else:
+        print(
+            "check-commit-message: no message provided "
+            "(pass a file, --message, --range, --self-test, or stdin).",
+            file=sys.stderr,
+        )
+        return 2
+
+    if not message.strip():
+        print("check-commit-message: empty message", file=sys.stderr)
+        return 2
+
+    errors, warnings = check(message)
+    for warning in warnings:
+        print(f"  WARN  {warning}")
+    for error in errors:
+        print(f"  ERROR {error}")
+    if errors:
+        print(
+            "\ncheck-commit-message: FAIL — use Conventional Commits and omit "
+            "Co-authored-by / tooling attribution."
+        )
+        return 1
+
+    print("check-commit-message: OK")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

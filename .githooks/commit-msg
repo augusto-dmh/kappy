@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Reject non-Conventional Commits and tooling attribution trailers.
+# Enable once per clone: git config core.hooksPath .githooks
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+exec python3 "$ROOT/scripts/check-commit-message" "$1"

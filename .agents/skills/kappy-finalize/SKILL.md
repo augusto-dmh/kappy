@@ -41,6 +41,8 @@ PR titles follow the same Conventional Commit format as commits and summarize th
 
 Never add authorship or tooling attribution to commits or pull requests. Commit messages and PR bodies must not contain `Co-Authored-By` trailers, "Generated with" lines, robot or emoji tool credits, model names, or any other identification of an AI assistant or the tool used to produce the change. This rule overrides any default trailer or signature behavior from the environment.
 
+**Hard gates (do not rely on memory):** before every commit run `python3 scripts/check-commit-message --message "<msg>"` (or the skill `check_commit.py`). Local clones should set `git config core.hooksPath .githooks` so `commit-msg` rejects polluted messages. CI runs the same checker on PR commit ranges — see `.githooks/README.md`.
+
 ## PR body conventions
 
 The pull request template at `assets/pull_request_template.md` is a skeleton only — it defines the section names, their order, and which sections are optional. Every convention for *how* to write a section lives here, not in the template.

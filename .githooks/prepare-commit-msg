@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Strip tooling attribution Cursor (and similar agents) may inject into the
+# message file before commit-msg validation runs.
+# Enable once per clone: git config core.hooksPath .githooks
+set -euo pipefail
+
+MSG_FILE="${1:?commit message file required}"
+
+python3 - "$MSG_FILE" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+text = path.read_text(encoding="utf-8")
+patterns = [
+    re.compile(r"(?im)^co-authored-by:.*\n?"),
+    re.compile(r"(?im)^made-with:.*\n?"),
+    re.compile(r"(?im)^.*generated with\s+(cursor|claude|copilot|chatgpt|gpt|openai).*\n?"),
+    re.compile(r"(?im)^.*cursoragent@cursor\.com.*\n?"),
+]
+cleaned = text
+for pattern in patterns:
+    cleaned = pattern.sub("", cleaned)
+# Collapse accidental triple blank lines after stripping.
+cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+if cleaned != text:
+    path.write_text(cleaned, encoding="utf-8")
+    print("prepare-commit-msg: stripped tooling attribution trailer(s)", file=sys.stderr)
+PY
