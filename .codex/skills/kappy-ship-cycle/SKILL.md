@@ -1,17 +1,19 @@
 ---
 name: kappy-ship-cycle
-description: 'End-to-end orchestrator for one Kappy PR: pick or receive the cycle goal, run a tlc-spec-driven cycle auto-selecting recommended options, publish the PR with kappy-finalize, run kappy-code-review in a fresh-context subagent, triage every finding with kappy-review-triage, apply accepted fixes, close review threads in the project resolution pattern, and merge after a single user approval. Use when asked to "ship the next PR", "run the ship cycle", "roda o ship cycle", or to resume a partially shipped cycle. Not for ad-hoc edits, standalone reviews (kappy-code-review), triage-only runs (kappy-review-triage), or publishing-only work (kappy-finalize).'
+description: 'End-to-end orchestrator for one Kappy PR: pick or receive the cycle goal, run a tlc-spec-driven cycle auto-selecting recommended options, publish the PR with kappy-finalize, run pr-review in a fresh-context subagent (local findings only — never posts to GitHub), triage with kappy-review-triage, apply accepted fixes, and merge after a single user approval. Use when asked to "ship the next PR", "run the ship cycle", "roda o ship cycle", or to resume a partially shipped cycle. Not for ad-hoc edits, standalone reviews (pr-review / kappy-code-review), triage-only runs (kappy-review-triage), or publishing-only work (kappy-finalize).'
 license: CC-BY-4.0
 metadata:
   author: Kappy contributors
-  version: 1.0.0
+  version: 1.1.0
 ---
 
 # Kappy Ship Cycle — Orchestration Protocol
 
-Runs one cycle from "what are we shipping?" to merged, replacing three manual sessions (tlc build → code review → triage/fix/merge) with one orchestrated pipeline. This skill owns only the glue; the work itself is delegated to `tlc-spec-driven`, `kappy-finalize`, `kappy-code-review`, and `kappy-review-triage` unchanged.
+Runs one cycle from "what are we shipping?" to merged, replacing three manual sessions (tlc build → code review → triage/fix/merge) with one orchestrated pipeline. This skill owns only the glue; the work itself is delegated to `tlc-spec-driven`, `kappy-finalize`, `pr-review`, and `kappy-review-triage` unchanged.
 
-**Autonomy contract:** the pipeline runs without user prompts except at exactly two gates — the triage disposition table (Stage 4, inherited from `kappy-review-triage`) and merge approval (Stage 7) — plus the escalation rule in Stage 1. Everything else proceeds on the recommended option, logged for audit. Invoking this skill constitutes the posting confirmation `kappy-code-review` normally waits for (its Step 10): the reviewer subagent posts its comments without asking again.
+**Autonomy contract:** the pipeline runs without user prompts except at exactly two gates — the triage disposition table (Stage 4, inherited from `kappy-review-triage`) and merge approval (Stage 7) — plus the escalation rule in Stage 1. Everything else proceeds on the recommended option, logged for audit.
+
+**Review delivery (binding, tally-aligned):** Stage 3 uses `pr-review` and writes only under `pr-review-{N}/`. **Never** post review findings, summaries, or disposition follow-ups to GitHub (`gh pr comment`, `gh pr review`, `gh api …/comments` create/reply). Local files + `.specs/.../review-triage.md` are the durable record.
 
 **Continuation contract (binding):** never end a turn "standing by", "awaiting your call", or asking "want me to proceed?" between stages — finish the stage, update the heartbeat, and start the next stage in the same turn. Anything that needs the user's eyes (e.g. a browser check) is deferred to the Stage 7 report, not raised as a mid-cycle pause. The only allowed stops are: the two gates above, a failed verification gate, and a hard blocker only the user can clear (state which one when stopping).
 
@@ -35,11 +37,11 @@ The pipeline is resumable. Check `.specs/.ship-status` first — if it shows an 
 | Clean `main`, no in-flight cycle | Stage 0 |
 | Cycle branch exists, tlc Execute incomplete (`.specs/features/<cycle>/`) | Stage 1 (tlc resume) |
 | Gates green on branch, no open PR | Stage 2 |
-| PR open, no review comments on it | Stage 3 |
-| PR has review comments, no `.specs/features/<cycle>/review-triage.md` | Stage 4 |
+| PR open, no `pr-review-{N}/` (or empty of findings/`_summary.md`) | Stage 3 |
+| `pr-review-{N}/` present, no `.specs/features/<cycle>/review-triage.md` | Stage 4 |
 | `review-triage.md` exists, accepted fixes not yet pushed | Stage 5 |
-| Fixes pushed, review threads not yet closed in the resolution pattern | Stage 6 |
-| Threads closed, PR unmerged | Stage 7 |
+| Fixes pushed; triage complete (no GitHub thread work — local-only reviews) | Stage 7 (skip Stage 6) |
+| Legacy: GitHub review threads still open from an old posting path | Stage 6 only if such threads exist; otherwise Stage 7 |
 
 Announce the detected stage and the cycle/PR it applies to before proceeding.
 
@@ -75,27 +77,31 @@ Invoke `kappy-finalize` for branch, Conventional Commit, push, and the ready-for
 
 ## Stage 3 — Review (fresh context, author ≠ reviewer)
 
-Spawn ONE subagent via the Agent tool (`general-purpose`, fresh context) with a prompt containing only: the repo, the PR number, the instruction to invoke the project-local `kappy-code-review` skill for that PR and follow it exactly, and the note that this ship-cycle invocation is the user's standing confirmation for its posting step.
+Spawn ONE subagent via the Agent tool (`general-purpose`, fresh context) with a prompt containing only: the repo, the PR number, and the instruction to invoke the project-local `pr-review` skill for that PR and follow it exactly.
 
-**Do not** pass implementation context, spec content, or this session's reasoning into the subagent — the reviewer's independence is the point of the fresh context. Wait for it to finish; its deliverable is comments on the PR, not text returned to you.
+**Hard rule:** the brief must say findings stay under `pr-review-{N}/` and **must not** be posted to GitHub. Do **not** pass a "standing confirmation to post" or invoke `kappy-code-review`'s posting step.
+
+**Do not** pass implementation context, spec content, or this session's reasoning into the subagent — the reviewer's independence is the point of the fresh context. Wait for it to finish; its deliverable is `pr-review-{N}/_summary.md` (+ finding files), returned as a compact path summary in chat.
 
 ## Stage 4 — Triage (kappy-review-triage)
 
-Invoke `kappy-review-triage` for the PR. It evaluates each posted finding with one sub-agent per finding, then presents the disposition table — in `once` mode this is a real gate (the user approves/edits dispositions); in `auto` mode apply the recommended dispositions and log them. Findings that misread the code, duplicate an accepted decision (ADR / STATE.md row), or trade against recorded scope decisions are `[INVÁLIDO]` with the reason.
+Invoke `kappy-review-triage` for the PR against **local** `pr-review-{N}/` findings. It evaluates each finding with one sub-agent per finding, then presents the disposition table — in `once` mode this is a real gate (the user approves/edits dispositions); in `auto` mode apply the recommended dispositions and log them. Findings that misread the code, duplicate an accepted decision (ADR / STATE.md row), or trade against recorded scope decisions are `[INVÁLIDO]` with the reason.
 
-Persist the triage to `.specs/features/<cycle>/review-triage.md` before touching code: one row per finding — source comment, file:line, verdict, disposition, rationale.
+Persist the triage to `.specs/features/<cycle>/review-triage.md` before touching code: one row per finding — source file, file:line, verdict, disposition, rationale. **Do not** run `post_dispositions.py` / post follow-ups to GitHub (normal path: no threads).
 
 ## Stage 5 — Fix
 
 Apply every accepted-fix finding. Group into atomic Conventional Commits per `kappy-finalize` rules (plain-language messages, no internal IDs, no AI attribution). Re-run the full Stage 1 gate before pushing. Push to the PR branch, then have `kappy-finalize` re-sync the PR body if the add-up changed the PR's scope (its add-up rule).
 
-## Stage 6 — Close the Loop on Threads
+## Stage 6 — Close the Loop (legacy GitHub threads only)
 
-Post the follow-ups `kappy-review-triage` prepared, in the project's resolution pattern: `[RESOLVED]` citing the fix commit + resolve the thread; `[ADIADO]` kept open; `[INVÁLIDO]` + resolve. Comments are **not** deleted — resolved threads and `review-triage.md` are the durable record. Re-fetch the threads and verify every finding carries its disposition follow-up.
+**Default: skip.** Local `pr-review` leaves nothing on the PR. Advance to Stage 7 after Stage 5 when triage is persisted and fixes (if any) are pushed.
+
+Only if unresolved GitHub review threads still exist from an older posting path: post the follow-ups `kappy-review-triage` prepared (`[RESOLVED]` / `[ADIADO]` / `[INVÁLIDO]`) and resolve threads per that skill. Prefer deleting erroneous agent-posted comments when the API allows, rather than leaving a public trail.
 
 ## Stage 7 — Merge Gate (the one remaining user prompt)
 
-Present a compact ship report: cycle, PR number, gate results, triage counts (real/false, fixed/deferred/invalid), fix commits, thread-closure status, and anything deferred to the user's eyes (e.g. a browser check). In `once` mode, ask the user (AskUserQuestion): merge now or hold. In `auto` mode with a clean report, merge without asking.
+Present a compact ship report: cycle, PR number, gate results, triage counts (real/false, fixed/deferred/invalid), fix commits, local review path (`pr-review-{N}/`), and anything deferred to the user's eyes (e.g. a browser check). In `once` mode, ask the user (AskUserQuestion): merge now or hold. In `auto` mode with a clean report, merge without asking.
 
 On approval: `gh pr merge {N} --merge` (merge commit, matching this repo's history), then `git checkout main && git pull` and delete the local feature branch.
 
@@ -105,7 +111,7 @@ Update `.specs/project/STATE.md` (decisions, lessons, handoff for the next cycle
 
 ## Delegation resilience (Stages 1 and 3)
 
-**Idle protocol (bounded):** an idle notification from a worker/reviewer WITHOUT a completion summary is a stall, not completion. Check observable progress first (Stage 3: inline + issue comment counts via `gh api`; Stage 1: the worker's reported commits/task state). If below expectation, send exactly ONE nudge naming what is missing. If a second idle arrives with no new progress, stop the agent and re-dispatch a fresh one with the same brief. No wakeup loops whose only purpose is re-nudging.
+**Idle protocol (bounded):** an idle notification from a worker/reviewer WITHOUT a completion summary is a stall, not completion. Check observable progress first (Stage 3: `pr-review-{N}/_summary.md` + finding file counts on disk — never GitHub comment counts; Stage 1: the worker's reported commits/task state). If below expectation, send exactly ONE nudge naming what is missing. If a second idle arrives with no new progress, stop the agent and re-dispatch a fresh one with the same brief. No wakeup loops whose only purpose is re-nudging.
 
 **Limit-death degradation:** a failed delegation citing a session/usage limit → re-dispatch once. If that also fails, execute that stage's remaining work inline in this session, in the same turn, and record the deviation (e.g. "author = reviewer this cycle") in `.specs/project/STATE.md`. If this session is itself rate-limited, write the heartbeat with exact resume instructions before stopping.
 
@@ -129,7 +135,7 @@ Don't give: an ordered list of edits, an enumerated list of tests, or a solution
 - No AI/tooling attribution anywhere public (commits, PR, comments).
 - No internal IDs (task/FR/cycle/gate) in commits, PR bodies, or PR comments — they live only under `.specs/`.
 - Multiline `gh` bodies go through `--body-file`/`-F body=@file`, never `-f body=@file`.
-- Never post PR-level content as a review (`gh pr review`) — reviews cannot be deleted.
+- Never post review findings or summaries to GitHub (`gh pr comment`, `gh pr review`, create/reply on `…/pulls/…/comments`). Use local `pr-review-{N}/` only. `gh pr review` bodies cannot be fully deleted — do not create them.
 - Wait on CI with `gh pr checks <N> --watch` as a background task — never `sleep N && gh …`.
 - Bash cwd can reset between calls: use absolute paths, run git from the repo root, Read any existing file before Edit/Write. Pass these rules into every worker/reviewer brief.
 - Subagents return compact final text — never report files; the orchestrator must be able to Read what comes back.

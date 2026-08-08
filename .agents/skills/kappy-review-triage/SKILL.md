@@ -88,31 +88,14 @@ Present a table: finding (path:line + short title) · disposition · why · comm
 ### Step 4 — Persist on confirmation
 
 1. **Always** write `.specs/features/<cycle>/review-triage.md` (create the feature dir if the cycle is known; otherwise `pr-review-{N}/review-triage.md`) with one row per finding: source file, `file:line`, verdict, disposition, rationale.
-2. **GitHub follow-ups only when a matching unresolved thread exists** for that finding. Build plan JSON and run:
-
-```bash
-.agents/skills/kappy-review-triage/scripts/post_dispositions.py <pr-number> <plan.json>
-```
-
-Use `--dry-run` first. Skip the poster entirely when there are no GitHub threads (normal for local-only `pr-review`).
+2. **GitHub follow-ups: do not post.** Local `pr-review` leaves no threads. Skip `post_dispositions.py` entirely. Only if the user explicitly asks to clean up **legacy** threads from an old posting path may follow-ups be posted — never as part of the default triage flow.
 3. Hand `FLAG` items to implementation as fix work.
-
-Plan JSON shape (poster validates it) — only include items that have a `comment_id`:
-
-```json
-{ "repo": "owner/name",
-  "items": [
-    { "comment_id": 123, "tag": "RESOLVED", "body": "[RESOLVED] Resolvido em e38ab3a — …", "resolve": true },
-    { "comment_id": 124, "tag": "ADIADO",   "body": "[ADIADO] Mantido aberto de propósito. …", "resolve": false },
-    { "comment_id": 125, "tag": "INVALIDO", "body": "[INVÁLIDO] Não procede — …", "resolve": true } ] }
-```
 
 ## Hard rules
 
-- **Never persist or post before the Step-3 confirmation.**
+- **Never persist before the Step-3 confirmation.**
 - **Never mark `[RESOLVED]`** without a concrete fix commit (auto-detected or user-confirmed).
-- **Follow-up comments** (when posting) are pt-BR, one per thread, exact `[RESOLVED]`/`[ADIADO]`/`[INVÁLIDO]` formats in `disposition-policy.md`.
-- **Internal artifacts ground, never cite** in any text that might be posted (`.specs/**`, skill rule paths).
+- **Never post triage follow-ups to GitHub** on the default path (tally-aligned local reviews).
 - **Never edit source code.**
 - Prefer local `pr-review-{N}/` as the source of truth for what to triage.
 
@@ -120,7 +103,7 @@ Plan JSON shape (poster validates it) — only include items that have a `commen
 
 ### Triage after a local pr-review
 
-"avalia os findings do PR 12." → load `pr-review-12/**` → one sub-agent each → dispositions approved → write `review-triage.md`. No GitHub threads → no `post_dispositions.py` run.
+"avalia os findings do PR 12." → load `pr-review-12/**` → one sub-agent each → dispositions approved → write `review-triage.md`. Nothing posted to GitHub.
 
 ### A finding that's real but not yet fixed
 
@@ -128,14 +111,10 @@ Disposition `FLAG` → listed for fix work; no `[RESOLVED]` claim. After the fix
 
 ## Troubleshooting
 
-### No local findings and no threads
+### No local findings
 
 Confirm the PR number; run `pr-review` first so `pr-review-{N}/` exists.
 
 ### Ambiguous fix commit
 
 Surface candidates at the Step-3 gate; pick the SHA before marking `RESOLVED`.
-
-### The poster reports a 401/permission error
-
-Only relevant when posting to existing GitHub threads. Run `gh auth status`.
