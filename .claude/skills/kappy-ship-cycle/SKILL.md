@@ -56,7 +56,7 @@ Announce the detected stage and the cycle/PR it applies to before proceeding.
 
 Invoke `tlc-spec-driven` for the cycle (Specify → Design → Tasks → Execute per its auto-sizing).
 
-**Auto-decision rule** (replaces the human answering Discuss questions): at every decision point, formulate the options — each with why-recommend AND why-not — pick the recommended one, and record option set, choice, and rationale in the cycle's spec artifacts and as a dated decision row in `.specs/project/STATE.md`. The decision must be auditable later without the conversation. A decision that meets the bar of an architecture decision (module boundary, dependency direction, external service) additionally gets an ADR via `create-adr` in `.specs/adr/`.
+**Auto-decision rule** (replaces the human answering Discuss questions): at every decision point, formulate the options — each with why-recommend AND why-not — pick the recommended one, and record option set, choice, and rationale in the cycle's **local** spec artifacts and as a dated decision row in **local** `.specs/project/STATE.md` (never commit those files in the product PR). The decision must be auditable later in the working tree without the conversation. A decision that meets the bar of an architecture decision (module boundary, dependency direction, external service) additionally gets an ADR via `create-adr` in `.specs/adr/` — and only then may an ADR file be committed, in an ADR-focused PR when the user asks.
 
 **Escalation rule** — ask the user (AskUserQuestion) instead of auto-deciding only when:
 - the decision changes product direction or scope beyond the cycle,
@@ -73,7 +73,9 @@ Invoke `tlc-spec-driven` for the cycle (Specify → Design → Tasks → Execute
 
 ## Stage 2 — Publish (kappy-finalize)
 
-Invoke `kappy-finalize` for branch, Conventional Commit, push, and the ready-for-review PR (its PR-body conventions apply — behavior-focused prose, no internal IDs). Include the cycle's planning artifacts (`.specs/features/<cycle>/*`, STATE.md updates) in the PR as in previous cycles. Capture the PR number for all later stages.
+Invoke `kappy-finalize` for branch, Conventional Commit, push, and the ready-for-review PR (its PR-body conventions apply — behavior-focused prose, no internal IDs).
+
+**`.specs` is local-only (binding):** never stage, commit, or push `.specs/features/**`, `.specs/project/STATE.md` updates, `.specs/.ship-status`, or triage/validation/handoff docs in a product PR. Those files exist for the agent on disk only (gitignored / left unstaged). Capture the PR number for all later stages.
 
 ## Stage 3 — Review (fresh context, author ≠ reviewer)
 
@@ -87,7 +89,7 @@ Spawn ONE subagent via the Agent tool (`general-purpose`, fresh context) with a 
 
 Invoke `kappy-review-triage` for the PR against **local** `pr-review-{N}/` findings. It evaluates each finding with one sub-agent per finding, then presents the disposition table — in `once` mode this is a real gate (the user approves/edits dispositions); in `auto` mode apply the recommended dispositions and log them. Findings that misread the code, duplicate an accepted decision (ADR / STATE.md row), or trade against recorded scope decisions are `[INVÁLIDO]` with the reason.
 
-Persist the triage to `.specs/features/<cycle>/review-triage.md` before touching code: one row per finding — source file, file:line, verdict, disposition, rationale. **Do not** run `post_dispositions.py` / post follow-ups to GitHub (normal path: no threads).
+Persist the triage to `.specs/features/<cycle>/review-triage.md` **locally only** (gitignored — never `git add`) before touching code: one row per finding — source file, file:line, verdict, disposition, rationale. **Do not** run `post_dispositions.py` / post follow-ups to GitHub (normal path: no threads).
 
 ## Stage 5 — Fix
 
@@ -107,7 +109,7 @@ On approval: `gh pr merge {N} --merge` (merge commit, matching this repo's histo
 
 ## Stage 8 — Wrap
 
-Update `.specs/project/STATE.md` (decisions, lessons, handoff for the next cycle) if anything new surfaced. Delete `.specs/.ship-status`. End the wrap report with: (a) the cycle closed + PR merged; (b) the suggested next cycle in one line, if one is apparent from STATE.md or an existing roadmap. Do not start the next cycle automatically — the next run of this skill picks it up.
+Update `.specs/project/STATE.md` **locally only** (never commit it from a ship cycle / product PR) if anything new surfaced for the next session. Delete `.specs/.ship-status`. End the wrap report with: (a) the cycle closed + PR merged; (b) the suggested next cycle in one line, if one is apparent from local STATE.md or an existing roadmap. Do not start the next cycle automatically — the next run of this skill picks it up.
 
 ## Delegation resilience (Stages 1 and 3)
 
@@ -133,7 +135,8 @@ Don't give: an ordered list of edits, an enumerated list of tests, or a solution
 ## Hygiene (applies to every stage)
 
 - No AI/tooling attribution anywhere public (commits, PR, comments).
-- No internal IDs (task/FR/cycle/gate) in commits, PR bodies, or PR comments — they live only under `.specs/`.
+- **Never commit `.specs/` planning artifacts in a product PR** — `.specs/features/**` (except the historical `modular-monolith` tree already on main), `.specs/.ship-status`, `review-triage.md`, `validation.md`, `handoff*.md`, and `STATE.md` edits stay local. Do not `git add` them. ADRs under `.specs/adr/` only when the user explicitly asked for an ADR PR.
+- No internal IDs (task/FR/cycle/gate) in commits, PR bodies, or PR comments — they live only under local `.specs/`.
 - Multiline `gh` bodies go through `--body-file`/`-F body=@file`, never `-f body=@file`.
 - Never post review findings or summaries to GitHub (`gh pr comment`, `gh pr review`, create/reply on `…/pulls/…/comments`). Use local `pr-review-{N}/` only. `gh pr review` bodies cannot be fully deleted — do not create them.
 - Wait on CI with `gh pr checks <N> --watch` as a background task — never `sleep N && gh …`.

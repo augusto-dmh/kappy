@@ -87,7 +87,7 @@ Present a table: finding (path:line + short title) · disposition · why · comm
 
 ### Step 4 — Persist on confirmation
 
-1. **Always** write `.specs/features/<cycle>/review-triage.md` (create the feature dir if the cycle is known; otherwise `pr-review-{N}/review-triage.md`) with one row per finding: source file, `file:line`, verdict, disposition, rationale.
+1. **Always** write `.specs/features/<cycle>/review-triage.md` **locally only** (create the feature dir if the cycle is known; otherwise `pr-review-{N}/review-triage.md`) with one row per finding: source file, `file:line`, verdict, disposition, rationale. **Never `git add` triage or other `.specs/features/**` files.**
 2. **GitHub follow-ups: do not post.** Local `pr-review` leaves no threads. Skip `post_dispositions.py` entirely. Only if the user explicitly asks to clean up **legacy** threads from an old posting path may follow-ups be posted — never as part of the default triage flow.
 3. Hand `FLAG` items to implementation as fix work.
 

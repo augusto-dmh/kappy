@@ -91,7 +91,7 @@ Adds the webhook receiver: signature verification, idempotent recording, and fas
 
 1. Run `git status --short`, `git branch --show-current`, and `git diff --stat`.
 2. Read the relevant diff before proposing a name.
-3. Identify unrelated working-tree changes and leave them unstaged.
+3. Identify unrelated working-tree changes and leave them unstaged — especially **all** `.specs/**` planning files (`features/`, `STATE.md` edits, `.ship-status`, triage/validation). Those are local-only and must not enter a product PR.
 4. If the task is only to suggest names or draft a PR description, stop before mutating Git state.
 5. When the branch already has an open PR, fetch its current body and commit list (`gh pr view <n> --json body,commits`) and note any commits not yet reflected in the body — those add-ups must be folded in when the body is re-synced (Step 5).
 
