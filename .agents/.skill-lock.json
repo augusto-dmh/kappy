@@ -1,0 +1,109 @@
+{
+  "version": 2,
+  "skills": {
+    "tlc-spec-driven": {
+      "name": "tlc-spec-driven",
+      "source": "local",
+      "contentHash": "9f4c793556001f3210a2d9fe3b41bf24e82e581c522d8dd50f65addfee169a29",
+      "installedAt": "2026-05-30T20:10:20.994Z",
+      "updatedAt": "2026-08-08T18:03:18.692Z",
+      "agents": [
+        "codex",
+        "claude-code",
+        "cursor"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "modular-design-principles": {
+      "name": "modular-design-principles",
+      "source": "local",
+      "contentHash": "d53fdca7ae18205376956c39a3a1729edfae843f63e5f2a6c5dd2c64ccd8a576",
+      "installedAt": "2026-05-30T20:14:37.500Z",
+      "updatedAt": "2026-05-30T20:14:37.500Z",
+      "agents": [
+        "codex"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "domain-analysis": {
+      "name": "domain-analysis",
+      "source": "local",
+      "contentHash": "5914beeaf1aa1fe57cd95cf0afb60ee1cccc58eedaddd123a43cad32d6a70077",
+      "installedAt": "2026-05-30T20:37:09.493Z",
+      "updatedAt": "2026-05-30T20:37:09.493Z",
+      "agents": [
+        "codex"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "modular-decomposition": {
+      "name": "modular-decomposition",
+      "source": "local",
+      "contentHash": "b536c1851c862516e5fc111502311343b952073a992ea07c9f8f9b42fbbc2a44",
+      "installedAt": "2026-05-30T20:37:09.521Z",
+      "updatedAt": "2026-05-30T20:37:09.521Z",
+      "agents": [
+        "codex"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "decomposition-planning-roadmap": {
+      "name": "decomposition-planning-roadmap",
+      "source": "local",
+      "contentHash": "8de88d993b2556a6b38c26fd79c863f06bf7746faf87c0c9fd1b9a198a49e1ac",
+      "installedAt": "2026-05-30T20:37:09.533Z",
+      "updatedAt": "2026-05-30T20:37:09.533Z",
+      "agents": [
+        "codex"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "skill-architect": {
+      "name": "skill-architect",
+      "source": "local",
+      "contentHash": "349b256153447631c3ed356996c3a62fec52493d07ba75e37b12c458f9fbf6bb",
+      "installedAt": "2026-05-30T21:34:21.031Z",
+      "updatedAt": "2026-05-30T21:34:21.072Z",
+      "agents": [
+        "cursor",
+        "claude-code",
+        "windsurf"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "create-adr": {
+      "name": "create-adr",
+      "source": "local",
+      "contentHash": "47ec663c849e8c1620c6f33a7be0055acdcf838c27ab7c16f44260244b80195a",
+      "installedAt": "2026-08-08T18:03:18.692Z",
+      "updatedAt": "2026-08-08T18:03:18.692Z",
+      "agents": [
+        "claude-code",
+        "codex",
+        "cursor"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "coupling-analysis": {
+      "name": "coupling-analysis",
+      "source": "local",
+      "contentHash": "a33a142a73ac2e6b8db300acb3d13dba5077e225cbfad7599b0ac431290ab5c7",
+      "installedAt": "2026-08-08T18:03:18.692Z",
+      "updatedAt": "2026-08-08T18:03:18.692Z",
+      "agents": [
+        "claude-code",
+        "codex",
+        "cursor"
+      ],
+      "method": "copy",
+      "global": false
+    }
+  }
+}

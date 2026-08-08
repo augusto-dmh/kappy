@@ -12,6 +12,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--summary-file", required=True, type=Path)
     parser.add_argument("--changes-file", required=True, type=Path)
     parser.add_argument("--verification-file", required=True, type=Path)
+    parser.add_argument("--extra-changes-file", type=Path)
     parser.add_argument("--screenshots-file", type=Path)
     parser.add_argument("--related-issues-file", type=Path)
     parser.add_argument("--output", type=Path)
@@ -44,8 +45,15 @@ def main() -> int:
     sections = [
         render_section("Summary", read_required(args.summary_file, "Summary")),
         render_section("Changes", read_required(args.changes_file, "Changes")),
-        render_section("Verification", read_required(args.verification_file, "Verification")),
     ]
+
+    extra_changes = read_optional(args.extra_changes_file)
+    if extra_changes is not None:
+        sections.append(render_section("Extra changes", extra_changes))
+
+    sections.append(
+        render_section("Verification", read_required(args.verification_file, "Verification"))
+    )
 
     screenshots = read_optional(args.screenshots_file)
     if screenshots is not None:
