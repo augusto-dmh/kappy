@@ -17,7 +17,7 @@ Each unresolved `kappy-review` finding gets exactly one disposition and, for thr
 - `[RESOLVED]` **must** cite a real short SHA (7+ chars) that actually addresses the finding. No SHA → it is not `RESOLVED`.
 - `[ADIADO]` gives the *reason it's deferred* (cost/benefit, low risk, convention not yet adopted), not a vague "later".
 - `[INVÁLIDO]` explains *why it doesn't hold* against the current code (e.g. the guard already exists, the value is safe-by-coercion).
-- Keep the original `<!-- kappy-review:TYPE -->` root comment untouched; the disposition is a **reply** beneath it.
+- Keep the original `<!-- pr-review:TYPE -->` root comment untouched (legacy `<!-- kappy-review:TYPE -->` accepted); the disposition is a **reply** beneath it when a GitHub thread exists.
 - `FLAG` never produces a comment — silence keeps `[RESOLVED]` meaningful and avoids promising work on the thread.
 - **Internal artifacts ground, never cite.** A follow-up may cite real code in the diff, sibling code, or a commit SHA — never an internal planning/spec artifact (`.specs/**`: PROJECT, STATE, ROADMAP, research, design, spec, tasks) or a skill rule-file path, nor its line number. Read them to justify the disposition; state their substance in plain prose in the comment.
 - **Plain language, enough overview.** Write the *why* for a developer who doesn't share the internal vocabulary: explain the consequence, introduce terms before leaning on them, avoid bare invariant-names/jargon ("no diff at rest", "fixtures"). Concise but not shallow.
