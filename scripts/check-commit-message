@@ -118,7 +118,7 @@ def check(message: str) -> tuple[list[str], list[str]]:
 def check_range(rev_range: str) -> int:
     try:
         completed = subprocess.run(
-            ["git", "log", "--format=%H%x00%B%x00", rev_range],
+            ["git", "log", "--no-merges", "--format=%H%x00%B%x00", rev_range],
             check=True,
             capture_output=True,
             text=True,
