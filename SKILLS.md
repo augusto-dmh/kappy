@@ -31,6 +31,8 @@ Think of the skills in three layers.
 | `kappy-manual-qa` | Produces a grounded manual-QA artifact for a shipped slice | "gera o QA", "manual QA for PR N" |
 | `skill-architect` | Designs and builds new skills (Discovery → Architecture → Craft → Validate) | "create a skill", "turn this into a skill" |
 | `kappy-finalize` | Publishes finished work: branch name, Conventional Commit, push, ready-for-review PR | "finalize", "commit", "open a PR" |
+| `pr-review` | Six-lens PR review grounded in Kappy's modular layout; writes findings under local `pr-review-{N}/` only — never posts to GitHub; asks whether to delete the dir when done | "review PR 12", "pr-review", "revisa esse PR" |
+| `kappy-review-triage` | Dispositions findings from `pr-review-{N}/` after manual approval | "avalia os findings do PR N", "triage the review" |
 
 **3. Decision & analysis skills — capture *why* before *what*.** Ported/adapted from the learny and fakeflix (Tech Leads Club) harnesses.
 
@@ -70,6 +72,7 @@ Key relationships:
 - **`tlc-spec-driven` is the engine.** Its Specify/Design/Tasks phases write `.specs/features/<feature>/{spec,design,tasks}.md`; its Execute phase consumes `tasks.md` and delegates tasks to sub-agents.
 - **Domain skills activate during Execute.** As a task touches a model, an Inertia page, a route, styling, or a test, the matching domain skill auto-engages so that slice of code follows Kappy conventions.
 - **`kappy-finalize` closes the loop**, turning the completed change into a branch, commit, and PR.
+- **`pr-review` then `kappy-review-triage`** review an open PR locally (`pr-review-{N}/`) and disposition findings — nothing is posted to GitHub by `pr-review`.
 - **`skill-architect` is orthogonal** — you use it to build new skills (it built `rpi-handoff`), not to ship features.
 
 ## Worked example — the modular-monolith conversion
@@ -107,3 +110,5 @@ Process guards from the prompt apply throughout: sub-agent delegation per task, 
 - **A small, well-understood change** → just build it; the domain skills auto-activate.
 - **You keep re-explaining the same workflow** → capture it with `skill-architect`.
 - **Work is done and verified** → `kappy-finalize`.
+- **PR code review (local/ephemeral)** → `pr-review`.
+- **Triage those findings** → `kappy-review-triage`.

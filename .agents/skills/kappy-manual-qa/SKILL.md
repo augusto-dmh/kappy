@@ -1,6 +1,6 @@
 ---
 name: kappy-manual-qa
-description: Generates a runnable manual-QA artifact for a just-implemented Kappy PR. Reads the open PR's number, branch, and diff; writes a tests/qa/PRNUMBER-BRANCH/QA-PRNUMBER-BRANCH.md whose steps are labeled READ-ONLY, MUTABLE, or PRODUCTION-AFFECTING and whose Expected values are grounded in real database ids (queried, or seeded-and-baked) and never contain PII; runs the safe local checks; then on success offers to commit the file to the PR or delete it. Auto-chains after kappy-finalize opens a PR, and also triggers on 'gera o QA manual desse PR', 'generate the manual QA for this PR', 'create the QA artifact for PR N', 'manual QA do Kappy'. Do NOT use for posting code-review comments (kappy-code-review or pr-review), implementing a PR (pr-execute), planning features (tlc-spec-driven), or committing the feature change itself (kappy-finalize).
+description: Generates a runnable manual-QA artifact for a just-implemented Kappy PR. Reads the open PR's number, branch, and diff; writes a tests/qa/PRNUMBER-BRANCH/QA-PRNUMBER-BRANCH.md whose steps are labeled READ-ONLY, MUTABLE, or PRODUCTION-AFFECTING and whose Expected values are grounded in real database ids (queried, or seeded-and-baked) and never contain PII; runs the safe local checks; then on success offers to commit the file to the PR or delete it. Auto-chains after kappy-finalize opens a PR, and also triggers on 'gera o QA manual desse PR', 'generate the manual QA for this PR', 'create the QA artifact for PR N', 'manual QA do Kappy'. Do NOT use for PR code review (pr-review), implementing a PR (pr-execute), planning features (tlc-spec-driven), or committing the feature change itself (kappy-finalize).
 license: CC-BY-4.0
 metadata:
   author: Kappy contributors
@@ -9,7 +9,7 @@ metadata:
 
 # Kappy Manual QA
 
-Generates a grounded, runnable manual-QA artifact for a Kappy PR that already exists on GitHub, drives the safe local checks, and then either commits the artifact to the PR or deletes it on your call. It sits after `kappy-finalize` opens a PR and is independent of `kappy-code-review`: that skill posts review comments, this one produces a QA checklist a human can actually run.
+Generates a grounded, runnable manual-QA artifact for a Kappy PR that already exists on GitHub, drives the safe local checks, and then either commits the artifact to the PR or deletes it on your call. It sits after `kappy-finalize` opens a PR and is independent of `pr-review`: that skill writes local review findings, this one produces a QA checklist a human can actually run.
 
 ## Operating principles
 
@@ -28,7 +28,7 @@ Generates a grounded, runnable manual-QA artifact for a Kappy PR that already ex
 
 ## When NOT to use
 
-- Posting code-review comments → `kappy-code-review` or `pr-review`.
+- PR code review → `pr-review`.
 - Implementing the PR or its fixes → `pr-execute`.
 - Planning an unimplemented feature → `tlc-spec-driven`.
 - Branching/committing/opening the PR for the feature change → `kappy-finalize`.
