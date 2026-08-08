@@ -19,6 +19,8 @@ class LaravelAiReviewer implements Reviewer
 
     public function generate(ReviewInput $input): DraftReview
     {
+        $this->assertDiffWithinLimit($input);
+
         $startedAt = hrtime(true);
 
         $response = $this->agent->prompt(
@@ -65,5 +67,22 @@ class LaravelAiReviewer implements Reviewer
         $diff = e($input->diff);
 
         return $metadata."\n<diff>\n".$diff."\n</diff>";
+    }
+
+    /**
+     * Skip oversized diffs before envelope allocation or the model call.
+     *
+     * @throws \RuntimeException When the diff exceeds kappy.review.max_pr_diff_lines.
+     */
+    private function assertDiffWithinLimit(ReviewInput $input): void
+    {
+        $maxLines = (int) config('kappy.review.max_pr_diff_lines');
+        $lineCount = substr_count($input->diff, "\n") + ($input->diff === '' ? 0 : 1);
+
+        if ($lineCount > $maxLines) {
+            throw new \RuntimeException(
+                "Pull request diff has {$lineCount} lines, which exceeds the configured limit of {$maxLines}."
+            );
+        }
     }
 }

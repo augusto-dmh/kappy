@@ -30,7 +30,7 @@ class ReviewSchema
     public const SEVERITIES = ['critical', 'high', 'medium', 'low', 'nit'];
 
     /**
-     * The allowed summary risk levels (severities plus "none").
+     * The allowed summary risk levels, a 1:1 mirror of RiskLevel's backings.
      *
      * @var list<string>
      */
@@ -55,7 +55,7 @@ class ReviewSchema
                     'category' => $schema->string()->enum(self::CATEGORIES)->required(),
                     'severity' => $schema->string()->enum(self::SEVERITIES)->required(),
                     'path' => $schema->string()->required(),
-                    'line' => $schema->integer()->required(),
+                    'line' => $schema->integer()->nullable()->required(),
                     'title' => $schema->string()->required(),
                     'message' => $schema->string()->required(),
                     'suggestion' => $schema->string()->nullable()->required(),

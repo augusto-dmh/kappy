@@ -21,12 +21,21 @@ class ReviewAgent implements Agent, HasProviderOptions, HasStructuredOutput
 
     /**
      * The system prompt that governs the review.
+     *
+     * @throws \RuntimeException When the versioned prompt file is missing or empty.
      */
     public function instructions(): Stringable|string
     {
-        return (string) file_get_contents(
-            __DIR__.'/../../resources/prompts/generate_v1.md'
-        );
+        $path = __DIR__.'/../../resources/prompts/generate_v1.md';
+        $contents = @file_get_contents($path);
+
+        if ($contents === false || $contents === '') {
+            throw new \RuntimeException(
+                "Review generate prompt is missing or empty at [{$path}]."
+            );
+        }
+
+        return $contents;
     }
 
     /**

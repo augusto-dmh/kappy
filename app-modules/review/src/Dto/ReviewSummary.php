@@ -2,6 +2,8 @@
 
 namespace Modules\Review\Dto;
 
+use Modules\Review\Enums\RiskLevel;
+
 /**
  * The PR-level summary the model returns alongside its findings.
  */
@@ -10,7 +12,7 @@ readonly class ReviewSummary
     public function __construct(
         public string $overview,
         public string $walkthrough,
-        public string $riskLevel,
+        public RiskLevel $riskLevel,
     ) {}
 
     /**
@@ -23,7 +25,7 @@ readonly class ReviewSummary
         return new self(
             overview: $summary['overview'],
             walkthrough: $summary['walkthrough'],
-            riskLevel: $summary['risk_level'],
+            riskLevel: RiskLevel::from($summary['risk_level']),
         );
     }
 }

@@ -2,10 +2,13 @@
 
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Modules\Review\Dto\DraftReview;
+use Modules\Review\Dto\ReviewSummary;
 use Modules\Review\Dto\Telemetry;
 use Modules\Review\Enums\FindingCategory;
 use Modules\Review\Enums\FindingSeverity;
+use Modules\Review\Enums\RiskLevel;
 use Modules\Review\Reviewer\ReviewSchema;
+use ValueError;
 
 /**
  * A synthetic structured response whose keys mirror the schema the generate
@@ -63,7 +66,7 @@ test('it maps a recorded structured response to a DraftReview', function () {
 
     expect($draft->summary->overview)->toBe('Adds a widget endpoint.')
         ->and($draft->summary->walkthrough)->toBe('A new controller and route were introduced.')
-        ->and($draft->summary->riskLevel)->toBe('medium')
+        ->and($draft->summary->riskLevel)->toBe(RiskLevel::Medium)
         ->and($draft->telemetry)->toBe($telemetry)
         ->and($draft->findings)->toHaveCount(2);
 
@@ -104,6 +107,33 @@ test('the findings schema severity enum mirrors FindingSeverity', function () {
 
     expect($findingProperties['severity']['enum'])
         ->toBe(array_column(FindingSeverity::cases(), 'value'));
+});
+
+test('the summary schema risk_level enum mirrors RiskLevel', function () {
+    $definition = ReviewSchema::definition(new JsonSchemaTypeFactory);
+
+    $summaryProperties = $definition['summary']->toArray()['properties'];
+
+    expect($summaryProperties['risk_level']['enum'])
+        ->toBe(ReviewSchema::RISK_LEVELS)
+        ->toBe(array_column(RiskLevel::cases(), 'value'))
+        ->not->toContain(FindingSeverity::Nit->value);
+});
+
+test('the findings schema allows a null line for file-level findings', function () {
+    $definition = ReviewSchema::definition(new JsonSchemaTypeFactory);
+
+    $line = $definition['findings']->toArray()['items']['properties']['line'];
+
+    expect($line['type'])->toBe(['integer', 'null']);
+});
+
+test('ReviewSummary rejects an unknown risk_level', function () {
+    expect(fn () => ReviewSummary::fromArray([
+        'overview' => 'x',
+        'walkthrough' => 'y',
+        'risk_level' => 'nit',
+    ]))->toThrow(ValueError::class);
 });
 
 test('the recorded fixture keys match the schema it must satisfy', function () {
