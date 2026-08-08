@@ -4,9 +4,9 @@ This repository ships a set of **skills** (reusable, model-invoked playbooks und
 
 > Skills are mirrored across three agent toolchains so each can find them: `.claude/skills/` (Claude Code), `.agents/skills/` (generic AGENTS), and `.codex/skills/` (Codex). When you add or change a skill, mirror it to the toolchains you use. This document is the single, tool-agnostic source of truth and is **not** mirrored.
 
-## Two layers of skills
+## Three layers of skills
 
-Think of the skills in two layers.
+Think of the skills in three layers.
 
 **1. Domain skills — auto-activate while you build.** These fire automatically based on the files and topics you touch. You rarely invoke them by name; they sharpen *how* code in their area is written.
 
@@ -25,10 +25,27 @@ Think of the skills in two layers.
 | --- | --- | --- |
 | `rpi-handoff` | At the end of research, emits two fresh-session prompts (Plan, Implement) with a seam-verification gate | "research is done, what next", "generate handoff prompts" |
 | `tlc-spec-driven` | Plans and executes: Specify → Design → Tasks → Execute, with traceable requirements and gates | "specify feature", "design", "tasks", "implement" |
+| `kappy-ship-cycle` | Orchestrates one full PR end-to-end: tlc cycle → finalize → fresh-context code review → triage → fixes → thread closure → user-gated merge; resumable via `.specs/.ship-status` | "ship the next PR", "run the ship cycle", "continue" |
+| `kappy-code-review` | Grounded inline review of a feature branch/PR; posts only on confirmation | "revisa esse PR", "review my branch" |
+| `kappy-review-triage` | Evaluates posted findings one sub-agent each; closes threads as [RESOLVED]/[ADIADO]/[INVÁLIDO] | "avalia os findings do PR N", "triage the review comments" |
+| `kappy-manual-qa` | Produces a grounded manual-QA artifact for a shipped slice | "gera o QA", "manual QA for PR N" |
 | `skill-architect` | Designs and builds new skills (Discovery → Architecture → Craft → Validate) | "create a skill", "turn this into a skill" |
 | `kappy-finalize` | Publishes finished work: branch name, Conventional Commit, push, ready-for-review PR | "finalize", "commit", "open a PR" |
 
-> The `.codex/skills/` toolchain also carries a decomposition family — `domain-analysis`, `modular-decomposition`, `modular-design-principles`, `decomposition-planning-roadmap` — used for breaking a system into modules/domains. They feed the *Research* and *Design* phases below.
+**3. Decision & analysis skills — capture *why* before *what*.** Ported/adapted from the learny and fakeflix (Tech Leads Club) harnesses.
+
+| Skill | Role | Typical trigger |
+| --- | --- | --- |
+| `grilling` / `grill-me` | Relentless one-question-at-a-time interview to stress-test a plan before building | "grill me", "stress-test this plan" |
+| `create-rfc` | Proposal document while a decision is still open | "write an RFC", "draft a proposal" |
+| `create-adr` | Records an accepted architecture decision in `.specs/adr/` | "write an ADR", "document this decision" |
+| `create-technical-design-doc` | Implementation-ready technical design once a decision is made | "write a design doc", "create a TDD" |
+| `coupling-analysis` | Khononov 3-D coupling analysis (strength × distance × volatility) of modules/dependencies | "analyze coupling", "evaluate architecture" |
+| `domain-analysis`, `modular-decomposition`, `modular-design-principles`, `decomposition-planning-roadmap` | Decomposition family: mapping domains and planning module boundaries | research/design phases |
+
+Decision artifacts flow: `grilling` sharpens the idea → `create-rfc` while open → `create-adr` once accepted → executable enforcement where possible (see `.specs/adr/0001-module-boundary-rules-and-architecture-fitness-functions.md`, the proposed Pest `arch()` fitness suite).
+
+> All three mirrors (`.claude/skills/`, `.agents/skills/`, `.codex/skills/`) now carry the identical full set, including the decomposition family used for breaking a system into modules/domains (it feeds the *Research* and *Design* phases below).
 
 ## How they interact
 

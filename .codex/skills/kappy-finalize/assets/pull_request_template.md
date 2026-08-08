@@ -6,6 +6,10 @@
 
 <!-- List the relevant implementation details. -->
 
+## Extra changes
+
+<!-- Include this section only when the branch bundles commits unrelated to the PR's primary purpose. Remove it otherwise. -->
+
 ## Verification
 
 <!-- List the automated tests, formatting, linting, and manual verification performed. -->
