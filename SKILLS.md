@@ -24,7 +24,7 @@ Think of the skills in three layers.
 | Skill | Role | Typical trigger |
 | --- | --- | --- |
 | `rpi-handoff` | At the end of research, emits two fresh-session prompts (Plan, Implement) with a seam-verification gate | "research is done, what next", "generate handoff prompts" |
-| `tlc-spec-driven` | Plans and executes: Specify → Design → Tasks → Execute, with traceable requirements and gates | "specify feature", "design", "tasks", "implement" |
+| `tlc-spec-driven` | Plans and executes: Specify → Design → Tasks → Execute, with EARS ACs, deterministic validation scripts, independent Verifier, and lessons | "specify feature", "design", "tasks", "implement", "validate", "resume work" |
 | `kappy-ship-cycle` | Orchestrates one full PR end-to-end: tlc cycle → finalize → fresh-context code review → triage → fixes → thread closure → user-gated merge; resumable via `.specs/.ship-status` | "ship the next PR", "run the ship cycle", "continue" |
 | `kappy-code-review` | Grounded inline review of a feature branch/PR; posts only on confirmation | "revisa esse PR", "review my branch" |
 | `kappy-review-triage` | Evaluates posted findings one sub-agent each; closes threads as [RESOLVED]/[ADIADO]/[INVÁLIDO] | "avalia os findings do PR N", "triage the review comments" |
