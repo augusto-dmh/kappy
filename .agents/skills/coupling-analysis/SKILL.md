@@ -1,6 +1,6 @@
 ---
-name: Coupling Analysis
-description: Analyzes coupling in a codebase following the three-dimensional model from "Balancing Coupling in Software Design" (Vlad Khononov). Use when evaluating architectural quality, identifying problematic dependencies, understanding integration strength between modules, or getting recommendations to improve modularity.
+name: coupling-analysis
+description: Analyzes coupling between modules using the three-dimensional model (strength, distance, volatility) from "Balancing Coupling in Software Design". Use when asking "are these modules too coupled?", "show me dependencies", "analyze integration quality", "which modules should I decouple?", "coupling report", or evaluating architectural health. Do NOT use for domain boundary analysis (use domain-analysis) or component sizing (use component-identification-sizing).
 ---
 
 # Coupling Analysis Skill
@@ -65,22 +65,6 @@ This allows classifying **subdomains** (critical for volatility):
 
 ### PHASE 2 — Structural Mapping
 
-**2.0 Discovery commands**
-
-Run across all five packages (`billing`, `identity`, `content`, `analytics`, `recommendations`); exclude `shared/` and `__test__/`.
-
-```bash
-find package -name "*.service.ts" -not -path "*/shared/*" -not -path "*/__test__/*"
-find package -name "*.entity.ts" -not -path "*/shared/*" -not -path "*/__test__/*"
-find package -name "*.repository.ts" -not -path "*/shared/*" -not -path "*/__test__/*"
-find package \( -name "*.controller.ts" -o -name "*.resolver.ts" \) -not -path "*/shared/*" -not -path "*/__test__/*"
-find package -name "*.facade.ts" -not -path "*/shared/*"
-grep -r "from '@tlc/" package/ --include="*.ts" | grep -v node_modules | head -20
-for pkg in billing identity content analytics recommendations; do echo "=== $pkg ==="; find "package/$pkg" -name "*.service.ts" -not -path "*/shared/*" | wc -l; done
-```
-
-Paths follow aggregate co-location (e.g. `package/billing/subscription/subscription.service.ts`).
-
 **2.1 Module inventory**
 
 For each module, record:
@@ -139,7 +123,35 @@ Downstream accesses implementation details of upstream that were _not designed f
 
 Modules implement interrelated functionalities — shared business logic, interdependent rules, or coupled workflows.
 
-**Three degrees (weakest to strongest):** sequential (fixed order), transactional (all-or-nothing), symmetric (duplicated business rules that must stay in sync).
+**Three degrees (weakest to strongest)**:
+
+**a) Sequential (Temporal)** — modules must execute in specific order
+
+```python
+connection.open()   # must come first
+connection.query()  # depends on open
+connection.close()  # must come last
+```
+
+**b) Transactional** — operations must succeed or fail together
+
+```python
+with transaction:
+    service_a.update(data)
+    service_b.update(data)  # both must succeed
+```
+
+**c) Symmetric (strongest)** — same business logic duplicated in multiple modules
+
+```python
+# Module A
+def is_premium_customer(c): return c.purchases > 1000
+
+# Module B — duplicated rule! Must stay in sync
+def qualifies_for_discount(c): return c.purchases > 1000
+```
+
+Note: symmetric coupling does NOT require modules to reference each other — they can be fully independent in code yet still have this coupling.
 
 **General signals of Functional Coupling**:
 
@@ -164,6 +176,15 @@ class Analysis:
     def process(self, customer_id):
         customer = crm_repo.get(customer_id)  # returns full Customer
         status = customer.status  # only needs status, but knows everything
+```
+
+```typescript
+// Service B consuming Service A's internal model via API
+interface CustomerFromServiceA {
+  internalAccountCode: string; // internal detail exposed
+  legacyId: number; // unnecessary internal field
+  // ... many fields Service B doesn't need
+}
 ```
 
 **Degrees** (via static connascence):
@@ -303,7 +324,35 @@ Present the annotated graph:
 
 #### 6.3 Identified Issues (by severity)
 
-For each critical or moderate issue, document: modules involved, coupling type, evidence snippet, strength/distance/volatility scores, balance classification, impact, and recommendation.
+For each critical or moderate issue:
+
+```
+ISSUE: [descriptive name]
+────────────────────────────────────────
+Modules involved: A → B
+Coupling type: Functional Coupling (symmetric)
+Connascence level: Connascence of Value
+
+Evidence in code:
+  [snippet or description of found pattern]
+
+Dimensions:
+  • Strength:   HIGH  (Functional - symmetric)
+  • Distance:   HIGH  (separate services)
+  • Volatility: HIGH  (core subdomain)
+
+Balance Score: CRITICAL 🔴
+Maintenance: High — frequent changes propagate over long distance
+
+Impact: Any change to business rule [X] requires simultaneous
+        update in [A] and [B], which belong to different teams.
+
+Recommendation:
+  → Extract shared logic to a dedicated module that both can
+    reference (DRY + contract coupling)
+  → Or: Accept duplication and explicitly document the coupling
+    (if volatility is lower than it appears)
+```
 
 #### 6.4 Positive Patterns Found
 
@@ -342,10 +391,29 @@ For each critical or moderate issue, document: modules involved, coupling type, 
 
 ## Quick Heuristics
 
-- **Strength:** "If I change an internal detail of X, how many modules break?" / "Was the contract intentional?"
-- **Distance:** "Do teams need coordinated deploys?" / "If one module fails, does the other stop?"
-- **Volatility:** "Is this competitive core logic?" / "Does the business change this area often?"
-- **Balance:** "Do components that change together live together?" / "Where is strong + distant + volatile coupling?"
+**For Integration Strength**:
+
+- "If I change an internal detail of module X, how many other modules need to change?"
+- "Was the integration contract designed to be public, or is it accidental?"
+- "Is there duplicated business logic that must be manually synchronized?"
+
+**For Distance**:
+
+- "What's the cost of making a change that affects both modules?"
+- "Do teams maintaining these modules need to coordinate deployments?"
+- "If one module fails, does the other stop working?"
+
+**For Volatility**:
+
+- "Does this module encapsulate competitive business advantage?"
+- "Does the business team frequently request changes in this area?"
+- "Is there a history of many refactors in this area?"
+
+**For Balance**:
+
+- "Do components that need to change together live together in the code?"
+- "Are independent components well separated?"
+- "Where is there strong coupling with volatile and distant components?" (→ this is the main problem)
 
 ## Known Limitations
 
