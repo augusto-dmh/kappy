@@ -5,9 +5,13 @@ namespace Modules\GitHubApp\Actions;
 use Modules\GitHubApp\Enums\PullRequestState;
 use Modules\GitHubApp\Models\PullRequest;
 use Modules\GitHubApp\Models\Repository;
+use Modules\Review\Contracts\ReviewDispatcher;
+use Modules\Review\Enums\ReviewTrigger;
 
 class HandlePullRequestEvent
 {
+    public function __construct(private ReviewDispatcher $reviewDispatcher) {}
+
     public function execute(array $payload): void
     {
         $repository = Repository::where('github_repo_id', data_get($payload, 'repository.id'))->first();
@@ -28,7 +32,7 @@ class HandlePullRequestEvent
             default => PullRequestState::Open,
         };
 
-        PullRequest::updateOrCreate(
+        $pullRequest = PullRequest::updateOrCreate(
             [
                 'repository_id' => $repository->id,
                 'github_pr_number' => $prNumber,
@@ -40,6 +44,22 @@ class HandlePullRequestEvent
                 'head_sha' => (string) data_get($payload, 'pull_request.head.sha'),
                 'state' => $state,
             ]
+        );
+
+        $trigger = match ((string) data_get($payload, 'action')) {
+            'opened' => ReviewTrigger::PrOpened,
+            'synchronize' => ReviewTrigger::PrSynchronize,
+            default => null,
+        };
+
+        if ($trigger === null || ! $repository->review_enabled) {
+            return;
+        }
+
+        $this->reviewDispatcher->dispatch(
+            $pullRequest,
+            (string) data_get($payload, 'pull_request.head.sha'),
+            $trigger,
         );
     }
 }
