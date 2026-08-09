@@ -41,6 +41,8 @@ PR titles follow the same Conventional Commit format as commits and summarize th
 
 Never add authorship or tooling attribution to commits or pull requests. Commit messages and PR bodies must not contain `Co-Authored-By` trailers, "Generated with" lines, robot or emoji tool credits, model names, or any other identification of an AI assistant or the tool used to produce the change. This rule overrides any default trailer or signature behavior from the environment.
 
+**Hard gates (do not rely on memory):** before every commit run `python3 scripts/check-commit-message --message "<msg>"` (or the skill `check_commit.py`). Local clones should set `git config core.hooksPath .githooks` so `commit-msg` rejects polluted messages. CI runs the same checker on PR commit ranges — see `.githooks/README.md`.
+
 ## PR body conventions
 
 The pull request template at `assets/pull_request_template.md` is a skeleton only — it defines the section names, their order, and which sections are optional. Every convention for *how* to write a section lives here, not in the template.
@@ -89,7 +91,7 @@ Adds the webhook receiver: signature verification, idempotent recording, and fas
 
 1. Run `git status --short`, `git branch --show-current`, and `git diff --stat`.
 2. Read the relevant diff before proposing a name.
-3. Identify unrelated working-tree changes and leave them unstaged.
+3. Identify unrelated working-tree changes and leave them unstaged — especially **all** `.specs/**` planning files (`features/`, `STATE.md` edits, `.ship-status`, triage/validation). Those are local-only and must not enter a product PR.
 4. If the task is only to suggest names or draft a PR description, stop before mutating Git state.
 5. When the branch already has an open PR, fetch its current body and commit list (`gh pr view <n> --json body,commits`) and note any commits not yet reflected in the body — those add-ups must be folded in when the body is re-synced (Step 5).
 

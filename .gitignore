@@ -29,3 +29,9 @@ yarn-error.log
 /.vscode
 /.zed
 /pr-review-*/
+
+# Local-only planning / ship-cycle artifacts (never commit in product PRs)
+.specs/.ship-status
+.specs/features/**
+!.specs/features/modular-monolith/
+!.specs/features/modular-monolith/**

@@ -18,7 +18,11 @@ What it checks:
   ERROR  - type is not one of the allowed Conventional Commits types
   ERROR  - description is empty, starts uppercase, or ends with a period
   ERROR  - `!` breaking marker present but no `BREAKING CHANGE:` footer
+  ERROR  - AI/tooling attribution trailers (Co-authored-by, Made-with, Generated with …)
   WARN   - header longer than 72 characters
+
+For the repo-owned hook + CI hard gate, prefer `scripts/check-commit-message`
+(same rules; also supports `--range` and `--self-test`).
 
 Usage:
   python3 <skill-dir>/scripts/check_commit.py [msgfile]
@@ -34,6 +38,12 @@ import sys
 
 TYPES = ["feat", "fix", "refactor", "docs", "test", "style", "perf", "build", "ci", "chore"]
 HEADER_RE = re.compile(r"^(?P<type>\w+)(?:\((?P<scope>[^)]+)\))?(?P<bang>!)?: (?P<desc>.+)$")
+ATTRIBUTION_PATTERNS = [
+    (re.compile(r"(?im)^co-authored-by:\s*"), "Co-authored-by trailers are forbidden (including Cursor/agent attribution)"),
+    (re.compile(r"(?im)^made-with:\s*"), "Made-with trailers are forbidden"),
+    (re.compile(r"(?i)generated with\s+(cursor|claude|copilot|chatgpt|gpt|openai)"), "tooling 'Generated with …' credit lines are forbidden"),
+    (re.compile(r"(?i)cursoragent@cursor\.com"), "cursoragent@cursor.com attribution is forbidden"),
+]
 
 
 def read_message(args):
@@ -56,6 +66,11 @@ def check(message):
         lines.pop(0)
     if not lines:
         return (["empty commit message"], warnings)
+
+    full = "\n".join(lines)
+    for pattern, reason in ATTRIBUTION_PATTERNS:
+        if pattern.search(full):
+            errors.append(reason)
 
     header = lines[0].rstrip()
     if len(header) > 72:
