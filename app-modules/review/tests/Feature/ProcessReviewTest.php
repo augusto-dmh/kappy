@@ -172,3 +172,95 @@ test('the happy path fetches the diff, generates, persists, and ends ready to po
     expect($scmDriver->postCommentCalls)->toBeEmpty()
         ->and($scmDriver->checkRunCalls)->toBeEmpty();
 });
+
+test('an oversized diff is skipped with a reason and creates no findings', function () {
+    config()->set('kappy.review.max_pr_diff_lines', 2);
+
+    $review = queuedReviewFixture();
+
+    app()->instance(ScmDriver::class, new FakeScmDriverForProcessReview("line1\nline2\nline3"));
+    $reviewer = new FakeReviewerForProcessReview;
+    app()->instance(Reviewer::class, $reviewer);
+
+    ProcessReview::dispatchSync($review->id);
+
+    $review->refresh();
+
+    expect($review->status)->toBe(ReviewStatus::Skipped)
+        ->and($review->failure_reason)->not->toBeEmpty()
+        ->and($review->failure_reason)->not->toContain('line1')
+        ->and($review->findings)->toHaveCount(0)
+        ->and($reviewer->calls)->toBeEmpty();
+});
+
+test('a hard failure during generate marks the review failed without a diff in the reason', function () {
+    $review = queuedReviewFixture();
+
+    app()->instance(ScmDriver::class, new FakeScmDriverForProcessReview("diff --git a/a.php b/a.php\n+very secret customer content\n"));
+    app()->instance(Reviewer::class, new FakeReviewerForProcessReview(function () {
+        throw new RuntimeException('provider_timeout');
+    }));
+
+    ProcessReview::dispatchSync($review->id);
+
+    $review->refresh();
+
+    expect($review->status)->toBe(ReviewStatus::Failed)
+        ->and($review->failure_reason)->toBe('provider_timeout')
+        ->and($review->failure_reason)->not->toContain('secret customer content')
+        ->and($review->findings)->toHaveCount(0);
+});
+
+test('a hard failure fetching the diff marks the review failed', function () {
+    $review = queuedReviewFixture();
+
+    app()->instance(ScmDriver::class, new class implements ScmDriver
+    {
+        public function pullRequest(int $installationId, string $repositoryFullName, int $pullRequestNumber): array
+        {
+            return [];
+        }
+
+        public function diff(int $installationId, string $repositoryFullName, int $pullRequestNumber): string
+        {
+            throw new RuntimeException('scm_unreachable');
+        }
+
+        public function comments(int $installationId, string $repositoryFullName, int $pullRequestNumber): array
+        {
+            return [];
+        }
+
+        public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null): void {}
+
+        public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): void {}
+    });
+    app()->instance(Reviewer::class, new FakeReviewerForProcessReview);
+
+    ProcessReview::dispatchSync($review->id);
+
+    $review->refresh();
+
+    expect($review->status)->toBe(ReviewStatus::Failed)
+        ->and($review->failure_reason)->toBe('scm_unreachable')
+        ->and($review->findings)->toHaveCount(0);
+});
+
+test('a review that is not queued is left unchanged', function () {
+    $review = queuedReviewFixture(['status' => ReviewStatus::ReadyToPost, 'summary_overview' => 'Existing summary.']);
+
+    $scmDriver = new FakeScmDriverForProcessReview;
+    $reviewer = new FakeReviewerForProcessReview;
+    app()->instance(ScmDriver::class, $scmDriver);
+    app()->instance(Reviewer::class, $reviewer);
+
+    ProcessReview::dispatchSync($review->id);
+
+    $review->refresh();
+
+    expect($review->status)->toBe(ReviewStatus::ReadyToPost)
+        ->and($review->summary_overview)->toBe('Existing summary.')
+        ->and($review->started_at)->toBeNull()
+        ->and($scmDriver->diffCalls)->toBeEmpty()
+        ->and($reviewer->calls)->toBeEmpty();
+});
