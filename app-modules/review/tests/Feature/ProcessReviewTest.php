@@ -138,7 +138,39 @@ test('the happy path fetches the diff, generates, persists, and ends ready to po
     $review = queuedReviewFixture();
 
     $scmDriver = new FakeScmDriverForProcessReview;
-    $reviewer = new FakeReviewerForProcessReview;
+    $statusAtGenerate = null;
+    $reviewer = new FakeReviewerForProcessReview(function (ReviewInput $input) use ($review, &$statusAtGenerate) {
+        $statusAtGenerate = $review->fresh()->status;
+
+        return new DraftReview(
+            summary: new ReviewSummary(
+                overview: 'Adds a widget endpoint.',
+                walkthrough: 'A controller and route were introduced.',
+                riskLevel: RiskLevel::Medium,
+            ),
+            findings: [
+                new DraftFinding(
+                    category: FindingCategory::Security,
+                    severity: FindingSeverity::High,
+                    path: 'app/Http/Controllers/WidgetController.php',
+                    line: 42,
+                    title: 'Unvalidated request input',
+                    message: 'The request input is used without validation.',
+                    suggestion: 'Validate the payload with a FormRequest.',
+                    agentPrompt: null,
+                    confidence: 80,
+                ),
+            ],
+            telemetry: new Telemetry(
+                model: 'claude-opus-4-8',
+                inputTokens: 1200,
+                outputTokens: 300,
+                cachedTokens: 1000,
+                costCents: null,
+                durationMs: 4200,
+            ),
+        );
+    });
     app()->instance(ScmDriver::class, $scmDriver);
     app()->instance(Reviewer::class, $reviewer);
 
@@ -146,7 +178,8 @@ test('the happy path fetches the diff, generates, persists, and ends ready to po
 
     $review->refresh();
 
-    expect($review->status)->toBe(ReviewStatus::ReadyToPost)
+    expect($statusAtGenerate)->toBe(ReviewStatus::Generating)
+        ->and($review->status)->toBe(ReviewStatus::ReadyToPost)
         ->and($review->started_at)->not->toBeNull()
         ->and($review->summary_overview)->toBe('Adds a widget endpoint.')
         ->and($review->summary_risk_level)->toBe(RiskLevel::Medium)
@@ -171,6 +204,48 @@ test('the happy path fetches the diff, generates, persists, and ends ready to po
 
     expect($scmDriver->postCommentCalls)->toBeEmpty()
         ->and($scmDriver->checkRunCalls)->toBeEmpty();
+});
+
+test('the run transitions through fetching before the generate call', function () {
+    $review = queuedReviewFixture();
+
+    $probe = (object) ['statusAtDiff' => null];
+    $scmDriver = new class($review, $probe) implements ScmDriver
+    {
+        public function __construct(
+            private Review $review,
+            private object $probe,
+        ) {}
+
+        public function pullRequest(int $installationId, string $repositoryFullName, int $pullRequestNumber): array
+        {
+            return [];
+        }
+
+        public function diff(int $installationId, string $repositoryFullName, int $pullRequestNumber): string
+        {
+            $this->probe->statusAtDiff = $this->review->fresh()->status;
+
+            return "diff --git a/a.php b/a.php\n+\$x = 1;\n";
+        }
+
+        public function comments(int $installationId, string $repositoryFullName, int $pullRequestNumber): array
+        {
+            return [];
+        }
+
+        public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null): void {}
+
+        public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): void {}
+    };
+
+    app()->instance(ScmDriver::class, $scmDriver);
+    app()->instance(Reviewer::class, new FakeReviewerForProcessReview);
+
+    ProcessReview::dispatchSync($review->id);
+
+    expect($probe->statusAtDiff)->toBe(ReviewStatus::Fetching)
+        ->and($review->fresh()->status)->toBe(ReviewStatus::ReadyToPost);
 });
 
 test('an oversized diff is skipped with a reason and creates no findings', function () {
