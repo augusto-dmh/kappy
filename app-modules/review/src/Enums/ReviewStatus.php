@@ -8,6 +8,7 @@ enum ReviewStatus: string
     case Fetching = 'fetching';
     case Generating = 'generating';
     case Critiquing = 'critiquing';
+    case ReadyToPost = 'ready_to_post';
     case Posting = 'posting';
     case Completed = 'completed';
     case Failed = 'failed';

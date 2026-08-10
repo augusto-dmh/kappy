@@ -11,6 +11,7 @@ use Modules\GitHubApp\Models\PullRequest;
 use Modules\Review\Database\Factories\ReviewFactory;
 use Modules\Review\Enums\ReviewStatus;
 use Modules\Review\Enums\ReviewTrigger;
+use Modules\Review\Enums\RiskLevel;
 
 class Review extends Model
 {
@@ -38,6 +39,9 @@ class Review extends Model
         'cost_cents',
         'github_check_run_id',
         'summary_comment_id',
+        'summary_overview',
+        'summary_walkthrough',
+        'summary_risk_level',
         'started_at',
         'finished_at',
         'failure_reason',
@@ -54,6 +58,7 @@ class Review extends Model
             'trigger' => ReviewTrigger::class,
             'status' => ReviewStatus::class,
             'is_incremental' => 'boolean',
+            'summary_risk_level' => RiskLevel::class,
             'started_at' => 'datetime',
             'finished_at' => 'datetime',
         ];
