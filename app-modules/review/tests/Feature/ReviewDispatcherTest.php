@@ -1,12 +1,23 @@
 <?php
 
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Bus;
 use Modules\GitHubApp\Models\PullRequest;
 use Modules\Review\Contracts\ReviewDispatcher;
 use Modules\Review\Enums\ReviewStatus;
 use Modules\Review\Enums\ReviewTrigger;
+use Modules\Review\Jobs\ProcessReview;
 use Modules\Review\Models\Review;
 use Modules\Review\Services\EloquentReviewDispatcher;
+
+/**
+ * Every dispatch() call pushes ProcessReview onto the (sync, in tests) queue;
+ * faking it here keeps these tests about Review row creation only, not job
+ * execution, which ProcessReviewTest covers directly.
+ */
+beforeEach(function () {
+    Bus::fake(ProcessReview::class);
+});
 
 test('dispatch creates a queued review for a new pull request head sha', function () {
     $pullRequest = PullRequest::factory()->create();
@@ -51,6 +62,27 @@ test('dispatch creates a separate review when the head sha advances', function (
 
 test('review dispatcher is bound to the eloquent implementation', function () {
     expect(app(ReviewDispatcher::class))->toBeInstanceOf(EloquentReviewDispatcher::class);
+});
+
+test('dispatch pushes ProcessReview on the reviews queue when it creates a new review', function () {
+    $pullRequest = PullRequest::factory()->create();
+    $headSha = '11223344112233441122334411223344aabbccdd';
+
+    $review = app(ReviewDispatcher::class)->dispatch($pullRequest, $headSha, ReviewTrigger::PrOpened);
+
+    Bus::assertDispatched(ProcessReview::class, fn (ProcessReview $job) => $job->reviewId === $review->id
+        && $job->queue === 'reviews');
+});
+
+test('dispatch does not push another ProcessReview when a unique constraint race returns the existing review', function () {
+    $pullRequest = PullRequest::factory()->create();
+    $headSha = '11223344112233441122334411223344aabbccdd';
+    $dispatcher = app(ReviewDispatcher::class);
+
+    $dispatcher->dispatch($pullRequest, $headSha, ReviewTrigger::PrOpened);
+    $dispatcher->dispatch($pullRequest, $headSha, ReviewTrigger::PrSynchronize);
+
+    Bus::assertDispatchedTimes(ProcessReview::class, 1);
 });
 
 test('the database rejects a duplicate pull request and head sha pair', function () {
