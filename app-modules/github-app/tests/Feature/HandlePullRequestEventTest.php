@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Bus;
 use Modules\GitHubApp\Actions\HandlePullRequestEvent;
 use Modules\GitHubApp\Enums\PullRequestState;
 use Modules\GitHubApp\Models\Installation;
@@ -9,7 +10,16 @@ use Modules\Identity\Models\Account;
 use Modules\Review\Contracts\ReviewDispatcher;
 use Modules\Review\Enums\ReviewStatus;
 use Modules\Review\Enums\ReviewTrigger;
+use Modules\Review\Jobs\ProcessReview;
 use Modules\Review\Models\Review;
+
+/**
+ * dispatch() pushes ProcessReview onto the (sync, in tests) queue; faking it
+ * here keeps these tests about enqueue behaviour only, not job execution.
+ */
+beforeEach(function () {
+    Bus::fake(ProcessReview::class);
+});
 
 function prFixture(string $name): array
 {
@@ -127,6 +137,8 @@ test('opened with review enabled enqueues a queued review for the head sha', fun
         ->and($review->head_sha)->toBe('11223344112233441122334411223344aabbccdd')
         ->and($review->status)->toBe(ReviewStatus::Queued)
         ->and($review->trigger)->toBe(ReviewTrigger::PrOpened);
+
+    Bus::assertDispatched(ProcessReview::class, fn (ProcessReview $job) => $job->reviewId === $review->id);
 });
 
 test('synchronize with review enabled enqueues a queued review for the new head sha', function () {
@@ -174,14 +186,14 @@ test('non-eligible pull_request actions do not enqueue a review', function () {
 });
 
 test('HandlePullRequestEvent depends on the review dispatcher contract only', function () {
-    $parameter = (new \ReflectionClass(HandlePullRequestEvent::class))
+    $parameter = (new ReflectionClass(HandlePullRequestEvent::class))
         ->getConstructor()
         ->getParameters()[0];
 
     expect($parameter->getType()->getName())->toBe(ReviewDispatcher::class);
 
     $source = file_get_contents(
-        (new \ReflectionClass(HandlePullRequestEvent::class))->getFileName()
+        (new ReflectionClass(HandlePullRequestEvent::class))->getFileName()
     );
 
     expect($source)->not->toContain('Modules\\Review\\Services')
