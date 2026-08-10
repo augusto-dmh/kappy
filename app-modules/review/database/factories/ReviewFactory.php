@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Modules\GitHubApp\Models\PullRequest;
 use Modules\Review\Enums\ReviewStatus;
 use Modules\Review\Enums\ReviewTrigger;
+use Modules\Review\Enums\RiskLevel;
 use Modules\Review\Models\Review;
 
 /**
@@ -48,6 +49,24 @@ class ReviewFactory extends Factory
             'output_tokens' => fake()->numberBetween(500, 10_000),
             'started_at' => now()->subMinute(),
             'finished_at' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate that the review generated successfully and is ready to post.
+     */
+    public function readyToPost(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => ReviewStatus::ReadyToPost,
+            'generator_model' => 'claude-opus-4-8',
+            'input_tokens' => fake()->numberBetween(1_000, 50_000),
+            'output_tokens' => fake()->numberBetween(500, 10_000),
+            'cached_tokens' => fake()->numberBetween(0, 1_000),
+            'summary_overview' => fake()->sentence(),
+            'summary_walkthrough' => fake()->paragraph(),
+            'summary_risk_level' => RiskLevel::Medium,
+            'started_at' => now()->subMinute(),
         ]);
     }
 
