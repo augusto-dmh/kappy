@@ -4,6 +4,7 @@ use Carbon\CarbonInterface;
 use Modules\GitHubApp\Models\PullRequest;
 use Modules\Review\Enums\ReviewStatus;
 use Modules\Review\Enums\ReviewTrigger;
+use Modules\Review\Enums\RiskLevel;
 use Modules\Review\Models\Review;
 
 test('the factory creates a review linked to a pull request', function () {
@@ -36,10 +37,20 @@ test('the id is a 26-character lowercase ulid', function () {
         ->and($review->id)->toBe(strtolower($review->id));
 });
 
-test('the completed, failed and skipped states set the expected status', function () {
+test('the completed, failed, skipped and ready to post states set the expected status', function () {
     expect(Review::factory()->completed()->create()->status)->toBe(ReviewStatus::Completed)
         ->and(Review::factory()->failed()->create()->status)->toBe(ReviewStatus::Failed)
-        ->and(Review::factory()->skipped()->create()->status)->toBe(ReviewStatus::Skipped);
+        ->and(Review::factory()->skipped()->create()->status)->toBe(ReviewStatus::Skipped)
+        ->and(Review::factory()->readyToPost()->create()->status)->toBe(ReviewStatus::ReadyToPost);
+});
+
+test('the ready to post state persists the summary and telemetry columns', function () {
+    $review = Review::factory()->readyToPost()->create();
+
+    expect($review->summary_overview)->not->toBeEmpty()
+        ->and($review->summary_walkthrough)->not->toBeEmpty()
+        ->and($review->summary_risk_level)->toBe(RiskLevel::Medium)
+        ->and($review->generator_model)->toBe('claude-opus-4-8');
 });
 
 test('a pull request exposes its reviews', function () {

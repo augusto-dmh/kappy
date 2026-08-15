@@ -7,6 +7,7 @@ use Modules\Review\Contracts\Reviewer;
 use Modules\Review\Dto\DraftReview;
 use Modules\Review\Dto\ReviewInput;
 use Modules\Review\Dto\Telemetry;
+use Modules\Review\Support\PrDiffLimits;
 
 /**
  * The laravel/ai implementation of the Reviewer seam. It builds the prompt
@@ -76,10 +77,10 @@ class LaravelAiReviewer implements Reviewer
      */
     private function assertDiffWithinLimit(ReviewInput $input): void
     {
-        $maxLines = (int) config('kappy.review.max_pr_diff_lines');
-        $lineCount = substr_count($input->diff, "\n") + ($input->diff === '' ? 0 : 1);
+        if (PrDiffLimits::exceedsLimit($input->diff)) {
+            $lineCount = PrDiffLimits::lineCount($input->diff);
+            $maxLines = PrDiffLimits::maxLines();
 
-        if ($lineCount > $maxLines) {
             throw new \RuntimeException(
                 "Pull request diff has {$lineCount} lines, which exceeds the configured limit of {$maxLines}."
             );
