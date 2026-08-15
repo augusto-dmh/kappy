@@ -45,12 +45,12 @@ class GitHubScmDriver implements ScmDriver
             ->json();
     }
 
-    public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null): void
+    public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null, ?string $commitSha = null): int
     {
         throw new LogicException('posting lands in the review pipeline (Phase 3)');
     }
 
-    public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): void
+    public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): int
     {
         throw new LogicException('posting lands in the review pipeline (Phase 3)');
     }

@@ -52,14 +52,18 @@ class FakeScmDriverForProcessReview implements ScmDriver
         return [];
     }
 
-    public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null): void
+    public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null, ?string $commitSha = null): int
     {
-        $this->postCommentCalls[] = compact('installationId', 'repositoryFullName', 'pullRequestNumber', 'body', 'path', 'line');
+        $this->postCommentCalls[] = compact('installationId', 'repositoryFullName', 'pullRequestNumber', 'body', 'path', 'line', 'commitSha');
+
+        return count($this->postCommentCalls);
     }
 
-    public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): void
+    public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): int
     {
         $this->checkRunCalls[] = compact('installationId', 'repositoryFullName', 'headSha', 'name', 'summary');
+
+        return count($this->checkRunCalls);
     }
 }
 
@@ -234,9 +238,15 @@ test('the run transitions through fetching before the generate call', function (
             return [];
         }
 
-        public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null): void {}
+        public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null, ?string $commitSha = null): int
+        {
+            return 1;
+        }
 
-        public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): void {}
+        public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): int
+        {
+            return 1;
+        }
     };
 
     app()->instance(ScmDriver::class, $scmDriver);
@@ -324,9 +334,15 @@ test('a hard failure fetching the diff marks the review failed', function () {
             return [];
         }
 
-        public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null): void {}
+        public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null, ?string $commitSha = null): int
+        {
+            return 1;
+        }
 
-        public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): void {}
+        public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): int
+        {
+            return 1;
+        }
     });
     app()->instance(Reviewer::class, new FakeReviewerForProcessReview);
 
