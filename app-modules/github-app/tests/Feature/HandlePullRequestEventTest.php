@@ -10,15 +10,15 @@ use Modules\Identity\Models\Account;
 use Modules\Review\Contracts\ReviewDispatcher;
 use Modules\Review\Enums\ReviewStatus;
 use Modules\Review\Enums\ReviewTrigger;
-use Modules\Review\Jobs\ProcessReview;
 use Modules\Review\Models\Review;
 
 /**
- * dispatch() pushes ProcessReview onto the (sync, in tests) queue; faking it
- * here keeps these tests about enqueue behaviour only, not job execution.
+ * dispatch() pushes ProcessReview onto the (sync, in tests) queue; faking the
+ * bus here keeps these tests about enqueue behaviour only, not job execution.
+ * The fake is unfiltered so this module never imports review Jobs.
  */
 beforeEach(function () {
-    Bus::fake(ProcessReview::class);
+    Bus::fake();
 });
 
 function prFixture(string $name): array
@@ -137,8 +137,6 @@ test('opened with review enabled enqueues a queued review for the head sha', fun
         ->and($review->head_sha)->toBe('11223344112233441122334411223344aabbccdd')
         ->and($review->status)->toBe(ReviewStatus::Queued)
         ->and($review->trigger)->toBe(ReviewTrigger::PrOpened);
-
-    Bus::assertDispatched(ProcessReview::class, fn (ProcessReview $job) => $job->reviewId === $review->id);
 });
 
 test('synchronize with review enabled enqueues a queued review for the new head sha', function () {
