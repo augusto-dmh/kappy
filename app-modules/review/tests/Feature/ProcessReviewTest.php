@@ -262,7 +262,7 @@ test('an oversized diff is skipped with a reason and creates no findings', funct
     $review->refresh();
 
     expect($review->status)->toBe(ReviewStatus::Skipped)
-        ->and($review->failure_reason)->not->toBeEmpty()
+        ->and($review->failure_reason)->toBe('diff_exceeds_limit')
         ->and($review->failure_reason)->not->toContain('line1')
         ->and($review->findings)->toHaveCount(0)
         ->and($reviewer->calls)->toBeEmpty();
@@ -284,6 +284,24 @@ test('a hard failure during generate marks the review failed without a diff in t
         ->and($review->failure_reason)->toBe('provider_timeout')
         ->and($review->failure_reason)->not->toContain('secret customer content')
         ->and($review->findings)->toHaveCount(0);
+});
+
+test('unsafe exception messages are mapped to a generic failure reason', function () {
+    $review = queuedReviewFixture();
+
+    app()->instance(ScmDriver::class, new FakeScmDriverForProcessReview);
+    app()->instance(Reviewer::class, new FakeReviewerForProcessReview(function () {
+        throw new RuntimeException('content policy rejected prompt: diff --git a/secret.php b/secret.php');
+    }));
+
+    ProcessReview::dispatchSync($review->id);
+
+    $review->refresh();
+
+    expect($review->status)->toBe(ReviewStatus::Failed)
+        ->and($review->failure_reason)->toBe('review_failed')
+        ->and($review->failure_reason)->not->toContain('secret.php')
+        ->and($review->failure_reason)->not->toContain('diff --git');
 });
 
 test('a hard failure fetching the diff marks the review failed', function () {
@@ -338,4 +356,28 @@ test('a review that is not queued is left unchanged', function () {
         ->and($review->started_at)->toBeNull()
         ->and($scmDriver->diffCalls)->toBeEmpty()
         ->and($reviewer->calls)->toBeEmpty();
+});
+
+test('a second handle after the row was claimed is a no-op', function () {
+    $review = queuedReviewFixture(['status' => ReviewStatus::Fetching, 'started_at' => now()]);
+
+    $scmDriver = new FakeScmDriverForProcessReview;
+    $reviewer = new FakeReviewerForProcessReview;
+    app()->instance(ScmDriver::class, $scmDriver);
+    app()->instance(Reviewer::class, $reviewer);
+
+    ProcessReview::dispatchSync($review->id);
+
+    $review->refresh();
+
+    expect($review->status)->toBe(ReviewStatus::Fetching)
+        ->and($scmDriver->diffCalls)->toBeEmpty()
+        ->and($reviewer->calls)->toBeEmpty();
+});
+
+test('uniqueId is the review id so dispatch dedupes per review', function () {
+    $job = new ProcessReview('01REVIEWUNIQUEID0000000000');
+
+    expect($job->uniqueId())->toBe('01REVIEWUNIQUEID0000000000')
+        ->and($job->reviewId)->toBe('01REVIEWUNIQUEID0000000000');
 });

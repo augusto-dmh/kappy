@@ -10,6 +10,7 @@ use Modules\Review\Enums\FindingSeverity;
 use Modules\Review\Enums\FindingStatus;
 use Modules\Review\Enums\ReviewStatus;
 use Modules\Review\Enums\RiskLevel;
+use Modules\Review\Models\Finding;
 use Modules\Review\Models\Review;
 
 function draftFindingFixture(): DraftFinding
@@ -102,4 +103,24 @@ test('it never writes a diff-like value onto the review row', function () {
     expect($attributes)->not->toHaveKey('diff')
         ->and(collect($attributes)->filter(fn ($value) => is_string($value) && str_contains($value, 'diff --git')))
         ->toBeEmpty();
+});
+
+test('a mid-write finding failure rolls back the review summary update', function () {
+    $review = Review::factory()->create([
+        'status' => ReviewStatus::Generating,
+        'summary_overview' => null,
+    ]);
+
+    Finding::creating(function () {
+        throw new RuntimeException('forced_finding_write_failure');
+    });
+
+    expect(fn () => app(PersistGeneratedReview::class)->execute($review, draftReviewFixture([draftFindingFixture()])))
+        ->toThrow(RuntimeException::class, 'forced_finding_write_failure');
+
+    $review->refresh();
+
+    expect($review->status)->toBe(ReviewStatus::Generating)
+        ->and($review->summary_overview)->toBeNull()
+        ->and($review->findings()->count())->toBe(0);
 });
