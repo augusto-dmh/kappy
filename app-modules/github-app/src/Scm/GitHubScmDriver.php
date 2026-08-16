@@ -4,16 +4,16 @@ namespace Modules\GitHubApp\Scm;
 
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
-use LogicException;
+use InvalidArgumentException;
 use Modules\GitHubApp\Contracts\ScmDriver;
 use Modules\GitHubApp\Services\GitHubAppAuthenticator;
 
 /**
- * Read-only GitHub implementation of the ScmDriver seam.
+ * GitHub implementation of the ScmDriver seam.
  *
- * Every call authenticates with a freshly minted installation token. The
- * write methods are declared by the contract but not implemented yet — the
- * review pipeline that posts findings is what will exercise them.
+ * Every call authenticates with a freshly minted installation token. Comment
+ * bodies arrive fully composed: the driver adds no Kappy formatting of its
+ * own, it only maps a call onto the right REST resource.
  */
 class GitHubScmDriver implements ScmDriver
 {
@@ -45,14 +45,42 @@ class GitHubScmDriver implements ScmDriver
             ->json();
     }
 
-    public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null): void
+    public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null, ?string $commitSha = null): int
     {
-        throw new LogicException('posting lands in the review pipeline (Phase 3)');
+        $isInline = $path !== null || $line !== null;
+
+        if ($isInline && $commitSha === null) {
+            throw new InvalidArgumentException('an inline comment must be anchored to a commit sha');
+        }
+
+        // A PR-level comment is an issue comment; an anchored one is a review
+        // comment on a different endpoint with a different payload.
+        $url = $isInline
+            ? "https://api.github.com/repos/{$repositoryFullName}/pulls/{$pullRequestNumber}/comments"
+            : "https://api.github.com/repos/{$repositoryFullName}/issues/{$pullRequestNumber}/comments";
+
+        $payload = $isInline
+            ? ['body' => $body, 'commit_id' => $commitSha, 'path' => $path, 'line' => $line, 'side' => 'RIGHT']
+            : ['body' => $body];
+
+        return (int) $this->request($installationId, 'application/vnd.github+json')
+            ->post($url, $payload)
+            ->throw()
+            ->json('id');
     }
 
-    public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): void
+    public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): int
     {
-        throw new LogicException('posting lands in the review pipeline (Phase 3)');
+        return (int) $this->request($installationId, 'application/vnd.github+json')
+            ->post("https://api.github.com/repos/{$repositoryFullName}/check-runs", [
+                'name' => $name,
+                'head_sha' => $headSha,
+                'status' => 'completed',
+                'conclusion' => 'neutral',
+                'output' => ['title' => $name, 'summary' => $summary],
+            ])
+            ->throw()
+            ->json('id');
     }
 
     /**

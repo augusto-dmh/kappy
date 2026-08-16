@@ -36,11 +36,18 @@ interface ScmDriver
 
     /**
      * Post a comment on a pull request — inline when a path and line are given.
+     *
+     * Inline comments are anchored to a commit, so `$commitSha` is required
+     * whenever a path or line is passed.
+     *
+     * @return int The provider's id for the created comment.
      */
-    public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null): void;
+    public function postComment(int $installationId, string $repositoryFullName, int $pullRequestNumber, string $body, ?string $path = null, ?int $line = null, ?string $commitSha = null): int;
 
     /**
      * Publish a neutral check run (never pass/fail) against a commit.
+     *
+     * @return int The provider's id for the created check run.
      */
-    public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): void;
+    public function checkRun(int $installationId, string $repositoryFullName, string $headSha, string $name, string $summary): int;
 }

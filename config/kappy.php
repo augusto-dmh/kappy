@@ -48,6 +48,13 @@ return [
          */
         'inline_min_severity' => 'low',
 
+        /*
+         | The maximum number of eligible findings posted as inline comments.
+         | Overflow is folded into the summary so a noisy generate pass cannot
+         | flood the pull request.
+         */
+        'max_inline_comments' => (int) (env('KAPPY_MAX_INLINE_COMMENTS') ?: 10),
+
     ],
 
 ];
