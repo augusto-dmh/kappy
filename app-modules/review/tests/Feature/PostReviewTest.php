@@ -218,13 +218,22 @@ test('uniqueId is the review id so dispatch dedupes per review', function () {
         ->and($job->reviewId)->toBe('01POSTUNIQUEID000000000000');
 });
 
-test('the github-app module does not import review jobs', function () {
-    $imports = collect(File::allFiles(base_path('app-modules/github-app')))
+test('cross-module posting stays on contracts and models', function (string $root, string $forbidden) {
+    $imports = collect(File::allFiles(base_path($root)))
         ->filter(fn (SplFileInfo $file) => $file->getExtension() === 'php')
         ->filter(fn (SplFileInfo $file) => str_contains(
             File::get($file->getPathname()),
-            'Modules\\Review\\Jobs\\',
+            $forbidden,
         ));
 
     expect($imports)->toBeEmpty();
-});
+})->with([
+    ['app-modules/github-app/src', 'Modules\\Review\\Jobs\\'],
+    ['app-modules/github-app/src', 'Modules\\Review\\Services\\'],
+    ['app-modules/github-app/src', 'Modules\\Review\\Actions\\'],
+    ['app-modules/github-app/src', 'Modules\\Review\\Http\\'],
+    ['app-modules/review/src', 'Modules\\GitHubApp\\Services\\'],
+    ['app-modules/review/src', 'Modules\\GitHubApp\\Actions\\'],
+    ['app-modules/review/src', 'Modules\\GitHubApp\\Jobs\\'],
+    ['app-modules/review/src', 'Modules\\GitHubApp\\Http\\'],
+]);
