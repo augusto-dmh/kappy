@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Bus;
 use Modules\GitHubApp\Contracts\ScmDriver;
 use Modules\GitHubApp\Models\Installation;
 use Modules\GitHubApp\Models\PullRequest;
@@ -16,6 +17,7 @@ use Modules\Review\Enums\FindingSeverity;
 use Modules\Review\Enums\FindingStatus;
 use Modules\Review\Enums\ReviewStatus;
 use Modules\Review\Enums\RiskLevel;
+use Modules\Review\Jobs\PostReview;
 use Modules\Review\Jobs\ProcessReview;
 use Modules\Review\Models\Review;
 
@@ -138,6 +140,10 @@ function queuedReviewFixture(array $attributes = []): Review
     ]);
 }
 
+beforeEach(function () {
+    Bus::fake(PostReview::class);
+});
+
 test('the happy path fetches the diff, generates, persists, and ends ready to post', function () {
     $review = queuedReviewFixture();
 
@@ -208,6 +214,9 @@ test('the happy path fetches the diff, generates, persists, and ends ready to po
 
     expect($scmDriver->postCommentCalls)->toBeEmpty()
         ->and($scmDriver->checkRunCalls)->toBeEmpty();
+
+    Bus::assertDispatched(PostReview::class, fn (PostReview $job) => $job->reviewId === $review->id
+        && $job->queue === 'reviews');
 });
 
 test('the run transitions through fetching before the generate call', function () {
@@ -256,6 +265,8 @@ test('the run transitions through fetching before the generate call', function (
 
     expect($probe->statusAtDiff)->toBe(ReviewStatus::Fetching)
         ->and($review->fresh()->status)->toBe(ReviewStatus::ReadyToPost);
+
+    Bus::assertDispatched(PostReview::class);
 });
 
 test('an oversized diff is skipped with a reason and creates no findings', function () {
@@ -276,6 +287,8 @@ test('an oversized diff is skipped with a reason and creates no findings', funct
         ->and($review->failure_reason)->not->toContain('line1')
         ->and($review->findings)->toHaveCount(0)
         ->and($reviewer->calls)->toBeEmpty();
+
+    Bus::assertNotDispatched(PostReview::class);
 });
 
 test('a hard failure during generate marks the review failed without a diff in the reason', function () {
@@ -294,6 +307,8 @@ test('a hard failure during generate marks the review failed without a diff in t
         ->and($review->failure_reason)->toBe('provider_timeout')
         ->and($review->failure_reason)->not->toContain('secret customer content')
         ->and($review->findings)->toHaveCount(0);
+
+    Bus::assertNotDispatched(PostReview::class);
 });
 
 test('unsafe exception messages are mapped to a generic failure reason', function () {
@@ -312,6 +327,8 @@ test('unsafe exception messages are mapped to a generic failure reason', functio
         ->and($review->failure_reason)->toBe('review_failed')
         ->and($review->failure_reason)->not->toContain('secret.php')
         ->and($review->failure_reason)->not->toContain('diff --git');
+
+    Bus::assertNotDispatched(PostReview::class);
 });
 
 test('a hard failure fetching the diff marks the review failed', function () {
@@ -353,6 +370,8 @@ test('a hard failure fetching the diff marks the review failed', function () {
     expect($review->status)->toBe(ReviewStatus::Failed)
         ->and($review->failure_reason)->toBe('scm_unreachable')
         ->and($review->findings)->toHaveCount(0);
+
+    Bus::assertNotDispatched(PostReview::class);
 });
 
 test('a review that is not queued is left unchanged', function () {

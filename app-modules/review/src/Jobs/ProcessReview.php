@@ -93,6 +93,8 @@ class ProcessReview implements ShouldBeUnique, ShouldQueue
             $draft = $reviewer->generate($input);
 
             $persistGeneratedReview->execute($review, $draft);
+
+            PostReview::dispatch($review->id)->onQueue('reviews');
         } catch (\Throwable $e) {
             report($e);
 
