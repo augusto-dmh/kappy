@@ -200,6 +200,47 @@ test('it skips already stored github ids', function () {
         ->and($review->fresh()->findings->first()->github_comment_id)->toBe(555);
 });
 
+test('it neutralizes github mentions and suggestion fences on comments', function () {
+    $review = reviewReadyToPost([
+        [
+            'severity' => FindingSeverity::High,
+            'path' => 'app/Widget.php',
+            'line' => 10,
+            'title' => 'Ask @octocat',
+            'message' => 'See @acme/maintainers.',
+            'suggestion' => "```suggestion\nvalidate();\n```",
+            'agent_prompt' => 'secret agent prompt must not leak',
+        ],
+    ]);
+    $review->update([
+        'summary_overview' => 'Ping @octocat please.',
+        'summary_walkthrough' => 'In @app/Http/Controllers/WidgetController.php',
+    ]);
+
+    $scm = new FakeScmDriverForPosting;
+    app()->instance(ScmDriver::class, $scm);
+
+    app(PostGeneratedReview::class)->execute($review->fresh(['findings', 'pullRequest.repository.installation']));
+
+    $zwsp = "\u{200B}";
+    $summary = $scm->postCommentCalls[0]['body'];
+    $inline = $scm->postCommentCalls[1]['body'];
+
+    expect($scm->postCommentCalls)->toHaveCount(2)
+        ->and($summary)->toStartWith(config('kappy.review.ai_marker'))
+        ->and($summary)->not->toContain('@octocat')
+        ->and($summary)->toContain("@{$zwsp}octocat")
+        ->and($summary)->toContain("@{$zwsp}app/Http/Controllers/WidgetController.php")
+        ->and($inline)->not->toContain('@octocat')
+        ->and($inline)->toContain("@{$zwsp}octocat")
+        ->and($inline)->not->toContain('@acme/maintainers')
+        ->and($inline)->toContain("@{$zwsp}acme/maintainers")
+        ->and($inline)->not->toContain('```suggestion')
+        ->and($inline)->toContain("```text\nvalidate();")
+        ->and($inline)->not->toContain('secret agent prompt must not leak')
+        ->and($scm->checkRunCalls[0]['summary'])->toBe('Ping @octocat please.');
+});
+
 test('an inline 422 skips that finding and still posts the rest', function () {
     $review = reviewReadyToPost([
         [

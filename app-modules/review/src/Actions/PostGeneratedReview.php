@@ -119,6 +119,19 @@ class PostGeneratedReview
 
     private function marked(string $body): string
     {
-        return config('kappy.review.ai_marker')."\n".$body;
+        return config('kappy.review.ai_marker')."\n".$this->neutralizeForGitHub($body);
+    }
+
+    /**
+     * GitHub still parses @mentions and ```suggestion fences in App-posted
+     * Markdown. Model output is derived from an untrusted diff, so break those
+     * side effects at the write choke point. Check-run summaries skip this
+     * path on purpose.
+     */
+    private function neutralizeForGitHub(string $body): string
+    {
+        $withoutSuggestionFences = preg_replace('/^```suggestion\b/m', '```text', $body) ?? $body;
+
+        return preg_replace('/@(?!\x{200B})(?=[\w])/u', "@\u{200B}", $withoutSuggestionFences) ?? $withoutSuggestionFences;
     }
 }
