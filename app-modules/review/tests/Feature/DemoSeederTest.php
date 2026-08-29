@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Support\Facades\Bus;
-use Modules\Review\Database\Seeders\DemoSeeder;
 use Modules\Review\Enums\FindingSeverity;
 use Modules\Review\Enums\ReviewStatus;
 use Modules\Review\Models\Review;
@@ -10,12 +10,7 @@ use Modules\Review\Models\Review;
 test('the demo seeder creates a walkable inbox without dispatching review jobs', function () {
     Bus::fake();
 
-    User::factory()->create([
-        'name' => 'Test User',
-        'email' => 'test@example.com',
-    ]);
-
-    $this->seed(DemoSeeder::class);
+    $this->seed(DatabaseSeeder::class);
 
     Bus::assertNothingDispatched();
 
