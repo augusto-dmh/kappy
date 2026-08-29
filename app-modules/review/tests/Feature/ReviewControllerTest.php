@@ -88,6 +88,8 @@ test('the reviews index lists only reviews belonging to the authenticated user',
             ->where('reviews.0.pull_request_title', 'Seed the review inbox')
             ->where('reviews.0.status', 'completed')
             ->where('reviews.0.inbox_group', 'completed')
+            ->where('reviews.0.summary_risk_level', null)
+            ->where('reviews.0.timestamp', $mine['review']->fresh()->finished_at->toIso8601String())
         );
 
     expect($theirs['review']->id)->not->toBe($mine['review']->id);
@@ -134,6 +136,9 @@ test('the reviews index lists failed skipped and in-progress reviews with ids', 
                     && $rows->firstWhere('id', $failed->id)['inbox_group'] === 'failed'
                     && $rows->firstWhere('id', $skipped->id)['inbox_group'] === 'skipped'
                     && $rows->firstWhere('id', $queued->id)['inbox_group'] === 'in_progress'
+                    && $rows->firstWhere('id', $queued->id)['summary_risk_level'] === null
+                    && $rows->firstWhere('id', $queued->id)['findings_count'] === 0
+                    && filled($rows->firstWhere('id', $failed->id)['timestamp'])
                     && $rows->every(fn ($row) => filled($row['id']));
             })
         );
@@ -162,6 +167,18 @@ test('a member can view their own review with summaries and an agent prompt', fu
         'line' => 1,
         'agent_prompt' => 'Fix the critical bug.',
     ]);
+    Finding::factory()->for($fixtures['review'])->create([
+        'severity' => FindingSeverity::High,
+        'path' => 'src/A.php',
+        'line' => 10,
+        'agent_prompt' => 'Fix A at line 10.',
+    ]);
+    Finding::factory()->for($fixtures['review'])->create([
+        'severity' => FindingSeverity::High,
+        'path' => 'src/A.php',
+        'line' => 2,
+        'agent_prompt' => 'Fix A at line 2.',
+    ]);
 
     $this->actingAs($fixtures['user'])
         ->get(route('reviews.show', $fixtures['review']))
@@ -173,13 +190,20 @@ test('a member can view their own review with summaries and an agent prompt', fu
             ->where('review.summary_overview', 'Overview of the change.')
             ->where('review.summary_walkthrough', 'Walk through the files.')
             ->where('review.summary_risk_level', 'medium')
-            ->has('review.findings', 3)
+            ->has('review.findings', 5)
             ->where('review.findings.0.severity', 'critical')
             ->where('review.findings.0.path', 'src/C.php')
             ->where('review.findings.1.severity', 'high')
-            ->where('review.findings.1.agent_prompt', 'Fix the race in src/B.php:20.')
-            ->where('review.findings.2.severity', 'nit')
-            ->where('review.findings.2.agent_prompt', null)
+            ->where('review.findings.1.path', 'src/A.php')
+            ->where('review.findings.1.line', 2)
+            ->where('review.findings.2.severity', 'high')
+            ->where('review.findings.2.path', 'src/A.php')
+            ->where('review.findings.2.line', 10)
+            ->where('review.findings.3.severity', 'high')
+            ->where('review.findings.3.path', 'src/B.php')
+            ->where('review.findings.3.agent_prompt', 'Fix the race in src/B.php:20.')
+            ->where('review.findings.4.severity', 'nit')
+            ->where('review.findings.4.agent_prompt', null)
         );
 
     expect($prompted->agent_prompt)->toBe('Fix the race in src/B.php:20.');
@@ -227,5 +251,19 @@ test('an in-progress review show page does not require summaries', function () {
             ->where('review.summary_overview', null)
             ->where('review.summary_walkthrough', null)
             ->has('review.findings', 0)
+        );
+});
+
+test('an unknown failure reason is humanized with a generic fallback', function () {
+    $fixtures = memberReview(review: fn ($factory) => $factory->failed()->state([
+        'failure_reason' => 'not_a_real_reason',
+    ]));
+
+    $this->actingAs($fixtures['user'])
+        ->get(route('reviews.show', $fixtures['review']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('review.failure_reason', 'not_a_real_reason')
+            ->where('review.failure_reason_label', 'This review could not be completed.')
         );
 });
