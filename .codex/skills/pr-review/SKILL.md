@@ -62,7 +62,7 @@ GATE COMMANDS (CI / local truth):
   npm run lint && npm run types:check && npm run build
 ```
 
-Known modules today (re-check with `ls app-modules/` each run): `catalog`, `github-app`, `identity`, `review`.
+Known modules today (re-check with `ls app-modules/` each run): `github-app`, `identity`, `review`.
 
 ## Execution Contract (NON-NEGOTIABLE)
 
