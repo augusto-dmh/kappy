@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7311a2d17afc2df9744c5dfbd735d7b0",
+    "content-hash": "7165ca61a9e05a4f26a603e8f0ca3061",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -3827,38 +3827,6 @@
                 "source": "https://github.com/marc-mabe/php-enum/tree/v4.7.2"
             },
             "time": "2025-09-14T11:18:39+00:00"
-        },
-        {
-            "name": "modules/catalog",
-            "version": "1.0",
-            "dist": {
-                "type": "path",
-                "url": "app-modules/catalog",
-                "reference": "4751c2f4d31885d1b8c997a3315142a7249ddabd"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Modules\\Catalog\\Providers\\CatalogServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Modules\\Catalog\\": "src/",
-                    "Modules\\Catalog\\Tests\\": "tests/",
-                    "Modules\\Catalog\\Database\\Factories\\": "database/factories/",
-                    "Modules\\Catalog\\Database\\Seeders\\": "database/seeders/"
-                }
-            },
-            "license": [
-                "proprietary"
-            ],
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
         },
         {
             "name": "modules/github-app",
@@ -13096,12 +13064,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.4"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }
