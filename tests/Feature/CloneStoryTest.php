@@ -16,3 +16,10 @@ test('composer names the package kappy', function () {
     expect($composer['name'])->toBe('augusto-dmh/kappy')
         ->and($composer['description'])->not->toBe('The skeleton application for the Laravel framework.');
 });
+
+test('module conventions use wayfinder for the reviews breadcrumb', function () {
+    $readme = (string) file_get_contents(base_path('app-modules/README.md'));
+
+    expect($readme)->toContain('href: index()')
+        ->and($readme)->not->toContain("href: '/reviews'");
+});

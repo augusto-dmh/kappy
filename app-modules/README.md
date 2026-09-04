@@ -193,6 +193,8 @@ import AppLayout from '@/layouts/app-layout';
 A module page can also set a layout callback:
 
 ```typescript
+import { index } from '@/routes/reviews';
+
 export default function ReviewsIndex({ reviews }: Props) {
     return (/* ... */);
 }
@@ -201,7 +203,7 @@ ReviewsIndex.layout = {
     breadcrumbs: [
         {
             title: 'Reviews',
-            href: '/reviews',
+            href: index(),
         },
     ],
 };
