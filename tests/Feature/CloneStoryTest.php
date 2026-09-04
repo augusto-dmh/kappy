@@ -9,3 +9,10 @@ test('the repository has a public product readme', function () {
         ->and($readme)->not->toContain('kappy-research')
         ->and(mb_strtolower($readme))->not->toContain('interview');
 });
+
+test('composer names the package kappy', function () {
+    $composer = json_decode((string) file_get_contents(base_path('composer.json')), true);
+
+    expect($composer['name'])->toBe('augusto-dmh/kappy')
+        ->and($composer['description'])->not->toBe('The skeleton application for the Laravel framework.');
+});
