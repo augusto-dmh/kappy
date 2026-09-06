@@ -6,9 +6,9 @@ This application uses a modular-monolith architecture with [`internachi/modular`
 
 **Shared core** (`app/`): Authentication (Fortify), settings, and cross-module utilities.
 
-**Modules** (`app-modules/*/`): Domain-specific features — one module per bounded context. Examples: `catalog`, `orders`, `payments`.
+**Modules** (`app-modules/*/`): Domain-specific features — one module per bounded context. Live modules: `identity`, `github-app`, `review`.
 
-**Frontend convention**: The `module::page` naming scheme maps server-side routes to co-located React pages. A controller returns `Inertia::render('catalog::index')`, which resolves to `app-modules/catalog/resources/js/pages/index.tsx`.
+**Frontend convention**: The `module::page` naming scheme maps server-side routes to co-located React pages. A controller returns `Inertia::render('review::index')`, which resolves to `app-modules/review/resources/js/pages/index.tsx`.
 
 ---
 
@@ -70,13 +70,13 @@ app-modules/<name>/
 ### Create a model with migration and factory:
 
 ```bash
-php artisan make:model Product --module=catalog -mf
+php artisan make:model Order --module=orders -mf
 ```
 
 This creates:
-- `app-modules/catalog/src/Models/Product.php`
-- `app-modules/catalog/database/migrations/YYYY_MM_DD_HHMMSS_create_products_table.php`
-- `app-modules/catalog/database/factories/ProductFactory.php`
+- `app-modules/orders/src/Models/Order.php`
+- `app-modules/orders/database/migrations/YYYY_MM_DD_HHMMSS_create_orders_table.php`
+- `app-modules/orders/database/factories/OrderFactory.php`
 
 Run migrations with the standard command:
 
@@ -87,10 +87,10 @@ php artisan migrate
 ### Create a controller:
 
 ```bash
-php artisan make:controller ProductController --module=catalog
+php artisan make:controller OrderController --module=orders
 ```
 
-Creates `app-modules/catalog/src/Http/Controllers/ProductController.php`.
+Creates `app-modules/orders/src/Http/Controllers/OrderController.php`.
 
 ### Route and render an Inertia page:
 
@@ -100,10 +100,10 @@ Edit `app-modules/<name>/routes/<name>-routes.php`:
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Catalog\Http\Controllers\ProductController;
+use Modules\Orders\Http\Controllers\OrderController;
 
 Route::middleware(['web'])->group(function (): void {
-    Route::get('/catalog', [ProductController::class, 'index'])->name('catalog.index');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 });
 ```
 
@@ -112,24 +112,24 @@ In the controller, use the `module::page` naming convention:
 ```php
 <?php
 
-namespace Modules\Catalog\Http\Controllers;
+namespace Modules\Orders\Http\Controllers;
 
 use Inertia\Inertia;
 use Inertia\Response;
-use Modules\Catalog\Models\Product;
+use Modules\Orders\Models\Order;
 
-class ProductController
+class OrderController
 {
     public function index(): Response
     {
-        return Inertia::render('catalog::index', [
-            'products' => Product::query()->latest()->get(),
+        return Inertia::render('orders::index', [
+            'orders' => Order::query()->latest()->get(),
         ]);
     }
 }
 ```
 
-The component name `catalog::index` is split and mapped to `app-modules/catalog/resources/js/pages/index.tsx`.
+The component name `orders::index` is split and mapped to `app-modules/orders/resources/js/pages/index.tsx`. The live review inbox uses the same pattern: `review::index` → `app-modules/review/resources/js/pages/index.tsx`.
 
 ---
 
@@ -145,12 +145,12 @@ Use **lowercase filenames** to match the existing `resources/js/pages/` conventi
 
 ### The `module::page` convention:
 
-The controller passes a string like `'catalog::index'` to `Inertia::render()`. This is resolved by `resources/js/app.tsx`:
+The controller passes a string like `'review::index'` to `Inertia::render()`. This is resolved by `resources/js/app.tsx`:
 
 ```typescript
 resolve: (name) => {
     if (name.includes('::')) {
-        const [module, page] = name.split('::');
+        const [module, page] = name.split('::'); // 'review::index'
         const path = `../../app-modules/${module}/resources/js/pages/${page}.tsx`;
         const loader = modulePages[path];
         if (!loader) {
@@ -193,15 +193,17 @@ import AppLayout from '@/layouts/app-layout';
 A module page can also set a layout callback:
 
 ```typescript
-export default function CatalogIndex({ products }: Props) {
+import { index } from '@/routes/reviews';
+
+export default function ReviewsIndex({ reviews }: Props) {
     return (/* ... */);
 }
 
-CatalogIndex.layout = {
+ReviewsIndex.layout = {
     breadcrumbs: [
         {
-            title: 'Catalog',
-            href: '/catalog',
+            title: 'Reviews',
+            href: index(),
         },
     ],
 };
@@ -293,17 +295,14 @@ When asserting a module page, use the `module::page` component name:
 <?php
 
 use Inertia\Testing\AssertableInertia as Assert;
-use Modules\Catalog\Models\Product;
 
-test('catalog index renders the catalog page with products', function () {
-    Product::factory()->count(3)->create();
-
-    $this->get(route('catalog.index'))
+test('the review inbox renders the co-located page', function () {
+    $this->actingAs($user)
+        ->get(route('reviews.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('catalog::index')
-            ->has('products', 3)
-            ->has('products.0.name')
+            ->component('review::index')
+            ->has('reviews')
         );
 });
 ```
@@ -338,7 +337,7 @@ php artisan test --testsuite=Modules
 Run a specific test file:
 
 ```bash
-php artisan test --compact app-modules/catalog/tests/Feature/ProductTest.php
+php artisan test --compact app-modules/review/tests/Feature/ReviewControllerTest.php
 ```
 
 ---

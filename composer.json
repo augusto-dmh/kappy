@@ -1,8 +1,8 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/react-starter-kit",
+    "name": "augusto-dmh/kappy",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "AI GitHub App that reviews pull requests.",
     "keywords": [
         "laravel",
         "framework"
@@ -20,7 +20,6 @@
         "laravel/socialite": "^5.27",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
-        "modules/catalog": "*",
         "modules/github-app": "*",
         "modules/identity": "*",
         "modules/review": "*"
