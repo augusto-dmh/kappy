@@ -114,6 +114,10 @@ class PostGeneratedReview
             $parts[] = $finding->suggestion;
         }
 
+        if (filled($finding->agent_prompt)) {
+            $parts[] = '**Agent fix prompt**'."\n\n````\n".$finding->agent_prompt."\n````";
+        }
+
         return implode("\n\n", $parts);
     }
 
