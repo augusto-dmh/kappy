@@ -115,7 +115,9 @@ class PostGeneratedReview
         }
 
         if (filled($finding->agent_prompt)) {
-            $parts[] = '**Agent fix prompt**'."\n\n````\n".$finding->agent_prompt."\n````";
+            $prompt = preg_replace('/`{4,}/', "`\u{200B}```", $finding->agent_prompt) ?? $finding->agent_prompt;
+
+            $parts[] = '**Agent fix prompt**'."\n\n````\n".$prompt."\n````";
         }
 
         return implode("\n\n", $parts);

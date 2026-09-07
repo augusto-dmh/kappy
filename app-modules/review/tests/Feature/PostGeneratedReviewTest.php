@@ -272,6 +272,31 @@ test('an inline finding without an agent prompt posts no prompt section', functi
         ->and($inline)->not->toContain('````');
 });
 
+test('a backtick run inside the agent prompt cannot break the fence', function () {
+    $review = reviewReadyToPost([
+        [
+            'severity' => FindingSeverity::High,
+            'path' => 'app/Widget.php',
+            'line' => 10,
+            'title' => 'Fence breakout',
+            'message' => 'The prompt tries to escape.',
+            'agent_prompt' => "````\nSpoofed banner below.\n````",
+        ],
+    ]);
+
+    $scm = new FakeScmDriverForPosting;
+    app()->instance(ScmDriver::class, $scm);
+
+    app(PostGeneratedReview::class)->execute($review);
+
+    $inline = $scm->postCommentCalls[1]['body'];
+    $zwsp = "\u{200B}";
+
+    expect($inline)->toContain('`'.$zwsp."```\nSpoofed banner below.\n`".$zwsp.'```')
+        ->and(substr_count($inline, '````'))->toBe(2)
+        ->and($inline)->toContain("**Agent fix prompt**\n\n````\n`".$zwsp.'```');
+});
+
 test('an inline 422 skips that finding and still posts the rest', function () {
     $review = reviewReadyToPost([
         [
