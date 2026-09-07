@@ -107,6 +107,7 @@ test('it posts a marked summary, eligible inlines, and a kappy-review check run'
             'line' => 20,
             'title' => 'Rename this variable',
             'message' => 'The name is unclear.',
+            'agent_prompt' => 'folded agent prompt must not leak',
         ],
     ]);
 
@@ -132,6 +133,7 @@ test('it posts a marked summary, eligible inlines, and a kappy-review check run'
         ->and($scm->postCommentCalls[0]['body'])->toContain('A controller was added.')
         ->and($scm->postCommentCalls[0]['body'])->toContain('Rename this variable')
         ->and($scm->postCommentCalls[0]['body'])->not->toContain('secret agent prompt must not leak')
+        ->and($scm->postCommentCalls[0]['body'])->not->toContain('folded agent prompt must not leak')
         ->and($scm->postCommentCalls[1]['installationId'])->toBe(42)
         ->and($scm->postCommentCalls[1]['path'])->toBe('app/Widget.php')
         ->and($scm->postCommentCalls[1]['line'])->toBe(10)
