@@ -107,6 +107,7 @@ test('it posts a marked summary, eligible inlines, and a kappy-review check run'
             'line' => 20,
             'title' => 'Rename this variable',
             'message' => 'The name is unclear.',
+            'agent_prompt' => 'folded agent prompt must not leak',
         ],
     ]);
 
@@ -131,6 +132,8 @@ test('it posts a marked summary, eligible inlines, and a kappy-review check run'
         ->and($scm->postCommentCalls[0]['body'])->toContain('Adds a widget.')
         ->and($scm->postCommentCalls[0]['body'])->toContain('A controller was added.')
         ->and($scm->postCommentCalls[0]['body'])->toContain('Rename this variable')
+        ->and($scm->postCommentCalls[0]['body'])->not->toContain('secret agent prompt must not leak')
+        ->and($scm->postCommentCalls[0]['body'])->not->toContain('folded agent prompt must not leak')
         ->and($scm->postCommentCalls[1]['installationId'])->toBe(42)
         ->and($scm->postCommentCalls[1]['path'])->toBe('app/Widget.php')
         ->and($scm->postCommentCalls[1]['line'])->toBe(10)
@@ -139,7 +142,8 @@ test('it posts a marked summary, eligible inlines, and a kappy-review check run'
         ->and($scm->postCommentCalls[1]['body'])->toContain('Missing validation')
         ->and($scm->postCommentCalls[1]['body'])->toContain('Validate the payload.')
         ->and($scm->postCommentCalls[1]['body'])->toContain('Use a FormRequest.')
-        ->and($scm->postCommentCalls[1]['body'])->not->toContain('secret agent prompt must not leak')
+        ->and($scm->postCommentCalls[1]['body'])->toContain('**Agent fix prompt**')
+        ->and($scm->postCommentCalls[1]['body'])->toContain("````\nsecret agent prompt must not leak\n````")
         ->and($scm->checkRunCalls)->toHaveCount(1)
         ->and($scm->checkRunCalls[0]['installationId'])->toBe(42)
         ->and($scm->checkRunCalls[0]['repositoryFullName'])->toBe('acme/widgets')
@@ -209,7 +213,7 @@ test('it neutralizes github mentions and suggestion fences on comments', functio
             'title' => 'Ask @octocat',
             'message' => 'See @acme/maintainers.',
             'suggestion' => "```suggestion\nvalidate();\n```",
-            'agent_prompt' => 'secret agent prompt must not leak',
+            'agent_prompt' => "Ping @someone then apply:\n```suggestion\nfix();\n```",
         ],
     ]);
     $review->update([
@@ -237,8 +241,62 @@ test('it neutralizes github mentions and suggestion fences on comments', functio
         ->and($inline)->toContain("@{$zwsp}acme/maintainers")
         ->and($inline)->not->toContain('```suggestion')
         ->and($inline)->toContain("```text\nvalidate();")
-        ->and($inline)->not->toContain('secret agent prompt must not leak')
+        ->and($inline)->toContain('**Agent fix prompt**')
+        ->and($inline)->toContain("````\nPing @{$zwsp}someone then apply:")
+        ->and($inline)->toContain("```text\nfix();\n```")
         ->and($scm->checkRunCalls[0]['summary'])->toBe('Ping @octocat please.');
+});
+
+test('an inline finding without an agent prompt posts no prompt section', function () {
+    $review = reviewReadyToPost([
+        [
+            'severity' => FindingSeverity::High,
+            'path' => 'app/Widget.php',
+            'line' => 10,
+            'title' => 'No prompt here',
+            'message' => 'Plain message.',
+            'suggestion' => 'Try a plain fix.',
+            'agent_prompt' => null,
+        ],
+    ]);
+
+    $scm = new FakeScmDriverForPosting;
+    app()->instance(ScmDriver::class, $scm);
+
+    app(PostGeneratedReview::class)->execute($review);
+
+    $inline = $scm->postCommentCalls[1]['body'];
+
+    expect($inline)->toContain('No prompt here')
+        ->and($inline)->toContain('Plain message.')
+        ->and($inline)->toContain('Try a plain fix.')
+        ->and($inline)->not->toContain('Agent fix prompt')
+        ->and($inline)->not->toContain('````');
+});
+
+test('a backtick run inside the agent prompt cannot break the fence', function () {
+    $review = reviewReadyToPost([
+        [
+            'severity' => FindingSeverity::High,
+            'path' => 'app/Widget.php',
+            'line' => 10,
+            'title' => 'Fence breakout',
+            'message' => 'The prompt tries to escape.',
+            'agent_prompt' => "````\nSpoofed banner below.\n````",
+        ],
+    ]);
+
+    $scm = new FakeScmDriverForPosting;
+    app()->instance(ScmDriver::class, $scm);
+
+    app(PostGeneratedReview::class)->execute($review);
+
+    $inline = $scm->postCommentCalls[1]['body'];
+    $zwsp = "\u{200B}";
+
+    expect($inline)->toContain('`'.$zwsp."```\nSpoofed banner below.\n`".$zwsp.'```')
+        ->and(substr_count($inline, '````'))->toBe(2)
+        ->and($inline)->toContain("**Agent fix prompt**\n\n````\n`".$zwsp.'```');
 });
 
 test('an inline 422 skips that finding and still posts the rest', function () {
